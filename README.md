@@ -1,6 +1,6 @@
 # CT312H: MOBILE PROGRAMMING
 
-## Project Name: Coffee Ordering & Management App
+## Project Name: Coffee Shop
 
 Semester 2, Academic year: 2025-2026
 
