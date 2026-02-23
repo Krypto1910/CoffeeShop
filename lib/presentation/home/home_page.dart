@@ -10,7 +10,6 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6EFE8),
-
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -22,7 +21,10 @@ class HomePage extends StatelessWidget {
               padding: EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
                 'Categories',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
 
@@ -45,7 +47,10 @@ class HomePage extends StatelessWidget {
               padding: EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
                 'Special Coffee',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
 
@@ -70,23 +75,10 @@ class HomePage extends StatelessWidget {
                 ],
               ),
             ),
+
+            const SizedBox(height: 24),
           ],
         ),
-      ),
-
-      // ===== Bottom Nav =====
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF6F4E37),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: ''),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_bag_outlined),
-            label: '',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: ''),
-        ],
       ),
     );
   }
