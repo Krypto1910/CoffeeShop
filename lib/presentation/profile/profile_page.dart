@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -47,23 +48,33 @@ class ProfilePage extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ===== MENU =====
-            _ProfileItem(icon: Icons.edit, title: 'Edit Profile', onTap: () {}),
+            _ProfileItem(
+              icon: Icons.edit,
+              title: 'Edit Profile',
+              onTap: () {
+                context.push('/profile/edit');
+              },
+            ),
             _ProfileItem(
               icon: Icons.receipt_long,
               title: 'Order History',
               onTap: () {
-                // Navigator.push(...)
+                context.push('/profile/orders');
               },
             ),
             _ProfileItem(
               icon: Icons.location_on,
               title: 'My Address',
-              onTap: () {},
+              onTap: () {
+                context.push('/profile/addresses');
+              },
             ),
             _ProfileItem(
               icon: Icons.credit_card,
               title: 'Payment Method',
-              onTap: () {},
+              onTap: () {
+                context.push('/profile/payment');
+              },
             ),
 
             const SizedBox(height: 12),

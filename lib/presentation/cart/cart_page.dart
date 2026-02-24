@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/cart_item.dart';
+import 'package:go_router/go_router.dart';
 
 class CartPage extends StatelessWidget {
   const CartPage({super.key});
@@ -72,18 +73,21 @@ class CartPage extends StatelessWidget {
                 _row('Total', '\$7.7', bold: true),
                 const SizedBox(height: 16),
 
-                Container(
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3A0F0A),
-                    borderRadius: BorderRadius.circular(26),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Proceed to Checkout',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                GestureDetector(
+                  onTap: () => context.push('/cart/checkout'),
+                  child: Container(
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3A0F0A),
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Proceed to Checkout',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),

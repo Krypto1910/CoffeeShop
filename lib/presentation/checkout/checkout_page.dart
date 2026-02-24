@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class CheckoutPage extends StatelessWidget {
   const CheckoutPage({super.key});
@@ -26,6 +27,9 @@ class CheckoutPage extends StatelessWidget {
               title: 'Home',
               subtitle: '123 Main Street, District 1',
               icon: Icons.location_on,
+              onTap: () {
+                context.push('/cart/checkout/address');
+              },
             ),
 
             const SizedBox(height: 16),
@@ -35,6 +39,9 @@ class CheckoutPage extends StatelessWidget {
               title: 'Cash on Delivery',
               subtitle: 'Pay when receiving',
               icon: Icons.payment,
+              onTap: () {
+                context.push('/cart/checkout/payment');
+              },
             ),
 
             const SizedBox(height: 16),
@@ -59,7 +66,7 @@ class CheckoutPage extends StatelessWidget {
                   ),
                 ),
                 onPressed: () {
-                  // Bước sau sẽ xử lý
+                  context.push('/cart/checkout/success');
                 },
                 child: const Text(
                   'Continue',
@@ -90,26 +97,33 @@ class CheckoutPage extends StatelessWidget {
     required String title,
     required String subtitle,
     required IconData icon,
+    VoidCallback? onTap, // 👈 thêm
   }) {
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.brown),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text(subtitle, style: const TextStyle(color: Colors.grey)),
-            ],
-          ),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.brown),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(subtitle, style: const TextStyle(color: Colors.grey)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

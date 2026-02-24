@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../widgets/hero_section.dart';
 import '../../widgets/category_item.dart';
 import '../../widgets/product_card.dart';
+import '/presentation/search/search_page.dart';
+import 'package:go_router/go_router.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -21,10 +23,7 @@ class HomePage extends StatelessWidget {
               padding: EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
                 'Categories',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
 
@@ -47,10 +46,7 @@ class HomePage extends StatelessWidget {
               padding: EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
                 'Special Coffee',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
 
@@ -59,18 +55,28 @@ class HomePage extends StatelessWidget {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: const [
-                  ProductCard(
-                    title: 'Chocolate Coffee',
-                    price: '\$80',
-                    oldPrice: '\$120',
-                    imagePath: 'assets/images/coffee1.png',
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      context.push('/home/products');
+                    },
+                    child: const ProductCard(
+                      title: 'Chocolate Coffee',
+                      price: '\$80',
+                      oldPrice: '\$120',
+                      imagePath: 'assets/images/coffee1.png',
+                    ),
                   ),
-                  ProductCard(
-                    title: 'Doppio Coffee',
-                    price: '\$70',
-                    oldPrice: '\$100',
-                    imagePath: 'assets/images/coffee2.png',
+                  GestureDetector(
+                    onTap: () {
+                      context.push('/home/products');
+                    },
+                    child: const ProductCard(
+                      title: 'Doppio Coffee',
+                      price: '\$70',
+                      oldPrice: '\$100',
+                      imagePath: 'assets/images/coffee2.png',
+                    ),
                   ),
                 ],
               ),

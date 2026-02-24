@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class HeroSection extends StatelessWidget {
   const HeroSection({super.key});
@@ -43,18 +44,23 @@ class HeroSection extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Container(
-                  height: 48,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Search something',
-                      style: TextStyle(color: Colors.grey),
+                child: GestureDetector(
+                  onTap: () {
+                    context.push('/home/search');
+                  },
+                  child: Container(
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Search something',
+                        style: TextStyle(color: Colors.grey),
+                      ),
                     ),
                   ),
                 ),
@@ -64,7 +70,7 @@ class HeroSection extends StatelessWidget {
                 height: 48,
                 width: 48,
                 decoration: BoxDecoration(
-                  color: Color(0xFF6F4E37),
+                  color: const Color(0xFF6F4E37),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(Icons.tune, color: Colors.white),

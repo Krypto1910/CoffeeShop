@@ -22,7 +22,7 @@ class FavoritePage extends StatelessWidget {
       'title': 'Mocha',
       'price': '\$95',
       'oldPrice': '\$130',
-      'image': 'assets/images/coffee3.png',
+      'image': 'assets/images/coffee.png',
     },
   ];
 

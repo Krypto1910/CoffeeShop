@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class OrderSuccessPage extends StatelessWidget {
   const OrderSuccessPage({super.key});
@@ -49,20 +50,25 @@ class OrderSuccessPage extends StatelessWidget {
             const SizedBox(height: 40),
 
             // ===== BACK TO HOME =====
-            Container(
+            SizedBox(
               height: 56,
               width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFF6F4E37),
-                borderRadius: BorderRadius.circular(28),
-              ),
-              child: const Center(
-                child: Text(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6F4E37),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                ),
+                onPressed: () {
+                  context.go('/home');
+                },
+                child: const Text(
                   'Back to Home',
                   style: TextStyle(
-                    color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
               ),
