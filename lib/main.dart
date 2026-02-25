@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'router/app_router.dart';
-
+import 'ui/favorite/favorite_manager.dart';
 
 void main() {
-  runApp(const CoffeeApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => FavoriteManager(),
+        ),
+      ],
+      child: const CoffeeApp(),
+    ),
+  );
 }
 
 class CoffeeApp extends StatelessWidget {

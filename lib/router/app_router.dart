@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../presentation/auth/splash_page.dart';
-import '../presentation/auth/login_page.dart';
-import '../presentation/home/home_page.dart';
-import '../presentation/favorite/favorite_page.dart';
-import '../presentation/cart/cart_page.dart';
-import '../presentation/profile/profile_page.dart';
-import '../presentation/profile/edit_profile_page.dart';
-import '../presentation/order/order_history_page.dart';
-import '../presentation/address/my_addresses_page.dart';
-import '../presentation/checkout/payment_method_page.dart';
-import '../presentation/checkout/checkout_page.dart';
-import '../presentation/checkout/order_success_page.dart';
-import '../presentation/search/search_page.dart';
-import '../presentation/product/product_detail_page.dart';
-import '../presentation/product/product_list_page.dart';
-import '../presentation/checkout/choose_address_page.dart';
+import '../ui/auth/splash_page.dart';
+import '../ui/auth/login_page.dart';
+import '../ui/home/home_page.dart';
+import '../ui/favorite/favorite_page.dart';
+import '../ui/cart/cart_page.dart';
+import '../ui/profile/profile_page.dart';
+import '../ui/profile/edit_profile_page.dart';
+import '../ui/order/order_history_page.dart';
+import '../ui/address/my_addresses_page.dart';
+import '../ui/checkout/payment_method_page.dart';
+import '../ui/checkout/checkout_page.dart';
+import '../ui/checkout/order_success_page.dart';
+import '../ui/search/search_page.dart';
+import '../ui/product/product_detail_page.dart';
+import '../ui/product/product_list_page.dart';
+import '../ui/checkout/choose_address_page.dart';
+import '../models/product.dart';
 
 class BottomNavBar extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -73,15 +74,14 @@ final GoRouter appRouter = GoRouter(
   initialLocation: '/home',
 
   routes: [
-    // global product detail route
-    // GoRoute(
-    //   name: 'productDetail',
-    //   path: '/product/:id',
-    //   builder: (context, state) {
-    //     final productId = state.pathParameters['id']!;
-    //     return ProductDetailPage(productId: productId);
-    //   },
-    // ),
+    GoRoute(
+      path: '/product',
+      builder: (context, state) {
+        final product = state.extra as Product;
+        return ProductDetailPage(product: product);
+      },
+    ),
+
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return BottomNavBar(navigationShell: navigationShell);
@@ -130,7 +130,7 @@ final GoRouter appRouter = GoRouter(
                       builder: (context, state) => const ChooseAddressPage(),
                     ),
                     GoRoute(
-                      path: 'payment', 
+                      path: 'payment',
                       builder: (context, state) => const PaymentMethodPage(),
                     ),
                     GoRoute(

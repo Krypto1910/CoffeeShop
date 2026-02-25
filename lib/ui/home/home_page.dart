@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import '../../widgets/hero_section.dart';
 import '../../widgets/category_item.dart';
 import '../../widgets/product_card.dart';
-import '/presentation/search/search_page.dart';
+import '../search/search_page.dart';
 import 'package:go_router/go_router.dart';
+import '../../models/product.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -56,27 +57,53 @@ class HomePage extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      context.push('/home/products');
-                    },
-                    child: const ProductCard(
+                  ProductCard(
+                    product: Product(
+                      id: 1,
                       title: 'Chocolate Coffee',
-                      price: '\$80',
-                      oldPrice: '\$120',
+                      price: 80.0,
+                      oldPrice: 120.0,
                       imagePath: 'assets/images/coffee1.png',
                     ),
-                  ),
-                  GestureDetector(
                     onTap: () {
                       context.push('/home/products');
                     },
-                    child: const ProductCard(
+                  ),
+                  ProductCard(
+                    product: Product(
+                      id: 2,
                       title: 'Doppio Coffee',
-                      price: '\$70',
-                      oldPrice: '\$100',
+                      price: 70.0,
+                      oldPrice: 100.0,
                       imagePath: 'assets/images/coffee2.png',
                     ),
+                    onTap: () {
+                      context.push('/home/products');
+                    },
+                  ),
+                  ProductCard(
+                    product: Product(
+                      id: 3,
+                      title: 'Mocha Coffee',
+                      price: 85.0,
+                      oldPrice: 110.0,
+                      imagePath: 'assets/images/coffee1.png',
+                    ),
+                    onTap: () {
+                      context.push('/home/products');
+                    },
+                  ),
+                  ProductCard(
+                    product: Product(
+                      id: 4,
+                      title: 'Caramel Macchiato',
+                      price: 90.0,
+                      oldPrice: 100.0,
+                      imagePath: 'assets/images/coffee.png',
+                    ),
+                    onTap: () {
+                      context.push('/home/products');
+                    },
                   ),
                 ],
               ),

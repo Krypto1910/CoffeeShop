@@ -10,16 +10,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  # Các thư viện theo yêu cầu Rubric
   go_router: ^13.0.0
-  provider: ^6.1.2
   sqflite: ^2.3.2
   path: ^1.9.0
   flutter_local_notifications: ^17.0.0
   http: ^1.2.0
-
-  # Thư viện mặc định
+  provider: ^6.1.5
+  shared_preferences: ^2.2.2
   cupertino_icons: ^1.0.8
 
 dev_dependencies:

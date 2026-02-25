@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../widgets/product_card.dart';
-import '../product/product_detail_page.dart';
+import '../../models/product.dart';
 
 class SearchPage extends StatelessWidget {
   const SearchPage({super.key});
@@ -9,7 +10,6 @@ class SearchPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6EFE8),
-
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -19,13 +19,11 @@ class SearchPage extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ===== SEARCH BAR =====
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
@@ -40,18 +38,12 @@ class SearchPage extends StatelessWidget {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
-
-            // ===== POPULAR =====
             const Text(
               'Popular Coffee',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-
             const SizedBox(height: 12),
-
-            // ===== RESULT GRID =====
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,
@@ -60,29 +52,28 @@ class SearchPage extends StatelessWidget {
                 childAspectRatio: 0.65,
                 children: [
                   ProductCard(
-                    title: 'Cappuccino',
-                    price: '\$90',
-                    oldPrice: '\$120',
-                    imagePath: 'assets/images/coffee1.png',
+                    product: Product(
+                      id: 1,
+                      title: 'Cappuccino',
+                      price: 90.0,
+                      oldPrice: 120.0,
+                      imagePath: 'assets/images/coffee1.png',
+                    ),
+                    onTap: () {
+                      context.push(
+                        '/product',
+                        extra: Product(
+                          id: 1,
+                          title: 'Cappuccino',
+                          price: 90.0,
+                          oldPrice: 120.0,
+                          imagePath: 'assets/images/coffee1.png',
+                        ),
+                      );
+                    },
                   ),
-                  ProductCard(
-                    title: 'Latte',
-                    price: '\$85',
-                    oldPrice: '\$110',
-                    imagePath: 'assets/images/coffee2.png',
-                  ),
-                  ProductCard(
-                    title: 'Espresso',
-                    price: '\$70',
-                    oldPrice: '\$95',
-                    imagePath: 'assets/images/coffee.png',
-                  ),
-                  ProductCard(
-                    title: 'Mocha',
-                    price: '\$95',
-                    oldPrice: '\$130',
-                    imagePath: 'assets/images/coffee2.png',
-                  ),
+                 
+                
                 ],
               ),
             ),

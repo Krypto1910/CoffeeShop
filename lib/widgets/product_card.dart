@@ -1,98 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
+import '../models/product.dart';
 
 class ProductCard extends StatelessWidget {
-  final String title;
-  final String price;
-  final String oldPrice;
-  final String imagePath;
-  final VoidCallback? onTap; // ⭐ thêm onTap
+  final Product product;
+  final VoidCallback? onTap;
 
-  const ProductCard({
-    super.key,
-    required this.title,
-    required this.price,
-    required this.oldPrice,
-    required this.imagePath,
-    this.onTap,
-  });
+  const ProductCard({super.key, required this.product, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap, // ⭐ bắt sự kiện tap
+      onTap: onTap,
       child: Container(
-        width: 170,
+        width: 180,
+        margin: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
         child: Stack(
           children: [
-            // CARD
-            Container(
+            Padding(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // IMAGE
-                  Container(
-                    height: 110,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3E1D2),
+                  /// IMAGE
+                  SizedBox(
+                    height: 130,
+                    width: double.infinity,
+                    child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Center(
-                      child: Image.asset(
-                        imagePath,
-                        height: 80,
-                        fit: BoxFit.contain,
-                      ),
+                      child: Image.asset(product.imagePath, fit: BoxFit.cover),
                     ),
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
 
-                  // TITLE
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  // RATING + HEART
+                  /// TITLE + HEART
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Row(
-                        children: [
-                          Icon(Icons.star, size: 14, color: Colors.orange),
-                          SizedBox(width: 4),
-                          Text('4.3 (105)', style: TextStyle(fontSize: 12)),
-                        ],
+                    children: [
+                      Expanded(
+                        child: Text(
+                          product.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      Icon(Icons.favorite_border, size: 18),
+
+                      Padding(
+                        padding: const EdgeInsets.only(left: 18), // margin left
+                        child: const Icon(
+                          Icons.favorite_border,
+                          size: 24,
+                          color: Colors.grey,
+                        ),
+                      ),
                     ],
                   ),
 
                   const SizedBox(height: 6),
 
-                  // PRICE
+                  /// PRICE
                   Row(
                     children: [
                       Text(
-                        price,
+                        '\$${product.price.toStringAsFixed(0)}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
+                          color: Color(0xFF6F4E37),
                           fontSize: 14,
                         ),
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        oldPrice,
+                        '\$${product.oldPrice.toStringAsFixed(0)}',
                         style: const TextStyle(
                           decoration: TextDecoration.lineThrough,
                           color: Colors.grey,
@@ -105,21 +91,21 @@ class ProductCard extends StatelessWidget {
               ),
             ),
 
-            // ➕ BUTTON
+            /// ADD BUTTON (bottom right)
             Positioned(
               bottom: 0,
               right: 0,
               child: Container(
-                height: 42,
-                width: 42,
+                height: 40,
+                width: 40,
                 decoration: const BoxDecoration(
                   color: Color(0xFF6F4E37),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(24),
+                    bottomRight: Radius.circular(20),
                   ),
                 ),
-                child: const Icon(Icons.add, color: Colors.white),
+                child: const Icon(Icons.add, color: Colors.white, size: 20),
               ),
             ),
           ],

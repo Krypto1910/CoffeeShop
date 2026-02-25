@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
+import '../../models/product.dart';
 import '../../widgets/quantity_selector.dart';
 import '../../widgets/option_chip.dart';
 
 class ProductDetailPage extends StatelessWidget {
-  final String title;
-  final String price;
-  final String imagePath;
+  final Product product;
 
   const ProductDetailPage({
     super.key,
-    required this.title,
-    required this.price,
-    required this.imagePath,
+    required this.product,
   });
 
   @override
@@ -27,7 +24,7 @@ class ProductDetailPage extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(32),
                 child: Image.asset(
-                  imagePath,
+                  product.imagePath,
                   height: 260,
                   width: double.infinity,
                   fit: BoxFit.cover,
@@ -50,14 +47,14 @@ class ProductDetailPage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        title,
+                        product.title,
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        price,
+                        '\$${product.price.toStringAsFixed(0)}',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
