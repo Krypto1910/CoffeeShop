@@ -39,40 +39,59 @@ class BottomNavBar extends StatelessWidget {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: showBottomNav
-          ? BottomNavigationBar(
-              currentIndex: navigationShell.currentIndex,
-              onTap: (index) {
-                navigationShell.goBranch(
-                  index,
-                  initialLocation: true, // always go to root of the branch
-                );
-              },
-              type: BottomNavigationBarType.fixed,
-              selectedItemColor: const Color(0xFF6F4E37),
-              items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.favorite_border),
-                  label: '',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.shopping_bag_outlined),
-                  label: '',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_outline),
-                  label: '',
-                ),
-              ],
+          ? Theme(
+              data: Theme.of(context).copyWith(
+                splashFactory: InkRipple.splashFactory,
+                splashColor: const Color(0xFF6F4E37).withOpacity(0.12),
+                highlightColor: Colors.transparent,
+                hoverColor: Colors.transparent,
+              ),
+              child: BottomNavigationBar(
+                currentIndex: navigationShell.currentIndex,
+                onTap: (index) {
+                  navigationShell.goBranch(
+                    index,
+                    initialLocation: true,
+                  );
+                },
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: Colors.white,
+                selectedItemColor: const Color(0xFF6F4E37),
+                showSelectedLabels: false,
+                showUnselectedLabels: false,
+                enableFeedback: false,
+                elevation: 8,
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.home_outlined),
+                    activeIcon: Icon(Icons.home),
+                    label: '',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.favorite_border),
+                    activeIcon: Icon(Icons.favorite),
+                    label: '',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.shopping_bag_outlined),
+                    activeIcon: Icon(Icons.shopping_bag),
+                    label: '',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.person_outline),
+                    activeIcon: Icon(Icons.person),
+                    label: '',
+                  ),
+                ],
+              ),
             )
-          : null, // hide bottom nav on subpages
+          : null,
     );
   }
 }
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/home',
-
   routes: [
     GoRoute(
       path: '/product',
@@ -81,7 +100,6 @@ final GoRouter appRouter = GoRouter(
         return ProductDetailPage(product: product);
       },
     ),
-
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return BottomNavBar(navigationShell: navigationShell);
@@ -105,7 +123,6 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -114,7 +131,6 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -127,15 +143,18 @@ final GoRouter appRouter = GoRouter(
                   routes: [
                     GoRoute(
                       path: 'address',
-                      builder: (context, state) => const ChooseAddressPage(),
+                      builder: (context, state) =>
+                          const ChooseAddressPage(),
                     ),
                     GoRoute(
                       path: 'payment',
-                      builder: (context, state) => const PaymentMethodPage(),
+                      builder: (context, state) =>
+                          const PaymentMethodPage(),
                     ),
                     GoRoute(
                       path: 'success',
-                      builder: (context, state) => const OrderSuccessPage(),
+                      builder: (context, state) =>
+                          const OrderSuccessPage(),
                     ),
                   ],
                 ),
@@ -143,7 +162,6 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -164,7 +182,8 @@ final GoRouter appRouter = GoRouter(
                 ),
                 GoRoute(
                   path: 'payment',
-                  builder: (context, state) => const PaymentMethodPage(),
+                  builder: (context, state) =>
+                      const PaymentMethodPage(),
                 ),
               ],
             ),

@@ -43,11 +43,41 @@ class HomePage extends StatelessWidget {
             ),
 
             // ===== Special Coffee =====
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 24, 16, 12),
-              child: Text(
-                'Special Coffee',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            const SizedBox(height: 24),
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                overlayColor: MaterialStateProperty.all(Colors.transparent),
+                highlightColor: Colors.transparent,
+                onTap: () {
+                  context.push('/home/products');
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 4,
+                    horizontal: 4,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Text(
+                        'Special Coffee',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 22,
+                        color: Colors.black54,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
 

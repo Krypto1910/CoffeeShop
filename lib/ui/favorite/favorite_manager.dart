@@ -12,13 +12,12 @@ class FavoriteManager with ChangeNotifier {
     _loadFavorites();
   }
 
-  bool isFavorite(String productId) {
+  bool isFavorite(int productId) {
     return _favorites.any((item) => item.id == productId);
   }
 
   Future<void> toggleFavorite(Product product) async {
-    final index =
-        _favorites.indexWhere((item) => item.id == product.id);
+    final index = _favorites.indexWhere((item) => item.id == product.id);
 
     if (index >= 0) {
       _favorites.removeAt(index);

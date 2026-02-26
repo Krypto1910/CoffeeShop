@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import '../models/product.dart';
+import 'package:provider/provider.dart';
+import '../ui/favorite/favorite_manager.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -53,11 +55,44 @@ class ProductCard extends StatelessWidget {
                       ),
 
                       Padding(
-                        padding: const EdgeInsets.only(left: 18), // margin left
-                        child: const Icon(
-                          Icons.favorite_border,
-                          size: 24,
-                          color: Colors.grey,
+                        padding: const EdgeInsets.only(left: 18),
+                        child: Consumer<FavoriteManager>(
+                          builder: (context, favManager, child) {
+                            final isFav = favManager.isFavorite(product.id);
+
+                            return GestureDetector(
+                              onTap: () {
+                                favManager.toggleFavorite(product);
+                              },
+                              child: TweenAnimationBuilder<double>(
+                                duration: const Duration(milliseconds: 250),
+                                tween: Tween(
+                                  begin: 0.8,
+                                  end: isFav ? 1.2 : 1.0,
+                                ),
+                                curve: Curves.easeOutBack,
+                                builder: (context, scale, child) {
+                                  return Transform.scale(
+                                    scale: scale,
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 50,
+                                      ),
+                                      padding: const EdgeInsets.all(4),
+            
+                                      child: Icon(
+                                        isFav
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        size: 22,
+                                        color: isFav ? Colors.red : Colors.grey,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
