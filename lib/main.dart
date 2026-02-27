@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'router/app_router.dart';
 import 'ui/favorite/favorite_manager.dart';
+import 'ui/cart/cart_manager.dart';
 
 void main() {
   runApp(
@@ -9,6 +10,9 @@ void main() {
       providers: [
         ChangeNotifierProvider(
           create: (_) => FavoriteManager(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => CartManager(),
         ),
       ],
       child: const CoffeeApp(),

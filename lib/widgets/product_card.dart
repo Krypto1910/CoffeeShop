@@ -3,6 +3,7 @@ import 'package:flutter/physics.dart';
 import '../models/product.dart';
 import 'package:provider/provider.dart';
 import '../ui/favorite/favorite_manager.dart';
+import '../ui/cart/cart_manager.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -65,7 +66,7 @@ class ProductCard extends StatelessWidget {
                                 favManager.toggleFavorite(product);
                               },
                               child: TweenAnimationBuilder<double>(
-                                duration: const Duration(milliseconds: 250),
+                                duration: const Duration(milliseconds: 150),
                                 tween: Tween(
                                   begin: 0.8,
                                   end: isFav ? 1.2 : 1.0,
@@ -79,7 +80,7 @@ class ProductCard extends StatelessWidget {
                                         milliseconds: 50,
                                       ),
                                       padding: const EdgeInsets.all(4),
-            
+
                                       child: Icon(
                                         isFav
                                             ? Icons.favorite
@@ -130,20 +131,71 @@ class ProductCard extends StatelessWidget {
             Positioned(
               bottom: 0,
               right: 0,
-              child: Container(
-                height: 40,
-                width: 40,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF6F4E37),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(20),
-                  ),
-                ),
-                child: const Icon(Icons.add, color: Colors.white, size: 20),
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: _AddButton(product: product),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddButton extends StatefulWidget {
+  final Product product;
+
+  const _AddButton({required this.product});
+
+  @override
+  State<_AddButton> createState() => _AddButtonState();
+}
+
+class _AddButtonState extends State<_AddButton> {
+  bool _animate = false;
+
+  void _handleTap() async {
+    setState(() => _animate = true);
+
+    // chờ animation scale xuống
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    setState(() => _animate = false);
+
+    // Add to cart
+    context.read<CartManager>().addToCart(widget.product);
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${widget.product.title} added to cart'),
+        duration: const Duration(milliseconds: 900),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _handleTap,
+      child: AnimatedScale(
+        scale: _animate ? 0.9 : 1.0,
+        duration: const Duration(milliseconds: 80),
+        curve: Curves.easeInOut,
+        child: Container(
+          height: 40,
+          width: 40,
+          decoration: const BoxDecoration(
+            color: Color(0xFF6F4E37),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16),
+              bottomRight: Radius.circular(20),
+            ),
+          ),
+          child: const Icon(Icons.add, color: Colors.white, size: 20),
         ),
       ),
     );
