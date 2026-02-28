@@ -8,7 +8,7 @@ import '../ui/cart/cart_page.dart';
 import '../ui/profile/profile_page.dart';
 import '../ui/profile/edit_profile_page.dart';
 import '../ui/order/order_history_page.dart';
-import '../ui/address/my_addresses_page.dart';
+import '../ui/address/my_address_page.dart';
 import '../ui/checkout/payment_method_page.dart';
 import '../ui/checkout/checkout_page.dart';
 import '../ui/checkout/order_success_page.dart';
@@ -178,7 +178,7 @@ final GoRouter appRouter = GoRouter(
                 ),
                 GoRoute(
                   path: 'addresses',
-                  builder: (context, state) => const MyAddressesPage(),
+                  builder: (context, state) => const MyAddressPage(),
                 ),
                 GoRoute(
                   path: 'payment',

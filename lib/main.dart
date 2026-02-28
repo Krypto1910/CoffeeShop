@@ -3,17 +3,14 @@ import 'package:provider/provider.dart';
 import 'router/app_router.dart';
 import 'ui/favorite/favorite_manager.dart';
 import 'ui/cart/cart_manager.dart';
-
+import 'ui/address/address_manager.dart';
 void main() {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => FavoriteManager(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => CartManager(),
-        ),
+        ChangeNotifierProvider(create: (_) => FavoriteManager()),
+        ChangeNotifierProvider(create: (_) => CartManager()),
+        ChangeNotifierProvider(create: (_) => AddressManager()),
       ],
       child: const CoffeeApp(),
     ),

@@ -13,6 +13,7 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
+  /// If true → skip delete confirmation dialog
   bool _skipDeleteConfirm = false;
 
   @override
@@ -66,11 +67,17 @@ class _CartPageState extends State<CartPage> {
                         final qty = entry.value;
 
                         return Dismissible(
-                          key: ValueKey(product.title),
+                          key: ValueKey(product.id),
                           direction: DismissDirection.endToStart,
+
+                          /// 🔥 CONFIRM BEFORE DELETE
+                          confirmDismiss: (direction) async {
+                            if (_skipDeleteConfirm) return true;
+                            return await _confirmDeleteDialog(context);
+                          },
+
                           background: _buildDeleteBackground(),
 
-                          /// When item dismissed
                           onDismissed: (_) {
                             final wasLastItem =
                                 cart.items.length == 1;
@@ -83,12 +90,13 @@ class _CartPageState extends State<CartPage> {
                                     const Text('Item removed'),
                                 behavior:
                                     SnackBarBehavior.floating,
+                                duration: const Duration(milliseconds: 500),
                                 margin: wasLastItem
                                     ? const EdgeInsets.all(16)
                                     : const EdgeInsets.fromLTRB(
                                         16, 0, 16, 250),
                                 backgroundColor:
-                                    const Color(0xFF3A0F0A),
+                                    const Color.fromRGBO(0, 0, 0, 0.8),
                                 shape: RoundedRectangleBorder(
                                   borderRadius:
                                       BorderRadius.circular(16),
@@ -117,7 +125,6 @@ class _CartPageState extends State<CartPage> {
                             ),
                             child: Row(
                               children: [
-                                /// Product image
                                 ClipRRect(
                                   borderRadius:
                                       BorderRadius.circular(12),
@@ -130,7 +137,6 @@ class _CartPageState extends State<CartPage> {
                                 ),
                                 const SizedBox(width: 14),
 
-                                /// Product info
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
@@ -156,7 +162,6 @@ class _CartPageState extends State<CartPage> {
                                   ),
                                 ),
 
-                                /// Quantity selector
                                 _buildQuantitySelector(
                                     context,
                                     cart,
@@ -171,12 +176,87 @@ class _CartPageState extends State<CartPage> {
                   ),
                 ),
 
-                /// ===================== ORDER SUMMARY =====================
                 _buildSummarySection(
                     subtotal, shipping, taxes, total),
               ],
             ),
     );
+  }
+
+  /// ===================== DELETE CONFIRM DIALOG =====================
+  Future<bool> _confirmDeleteDialog(
+      BuildContext context) async {
+    bool dontShowAgain = false;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Text(
+            "Remove Item",
+            style: TextStyle(
+                fontWeight: FontWeight.bold),
+          ),
+          content: StatefulBuilder(
+            builder: (context, setStateDialog) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Are you sure you want to remove this item?",
+                  ),
+                  const SizedBox(height: 20),
+
+                  /// Don't show again checkbox
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: dontShowAgain,
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            dontShowAgain =
+                                value ?? false;
+                          });
+                        },
+                      ),
+                      const Expanded(
+                        child: Text(
+                            "Don't show again"),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () =>
+                  Navigator.pop(context, false),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (dontShowAgain) {
+                  setState(() {
+                    _skipDeleteConfirm = true;
+                  });
+                }
+                Navigator.pop(context, true);
+              },
+              child: const Text("Remove"),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
   }
 
   /// ===================== DELETE BACKGROUND =====================
@@ -218,30 +298,30 @@ class _CartPageState extends State<CartPage> {
       ),
       child: Row(
         children: [
-          /// Decrease button
           _qtyBtn(
             icon: Icons.remove,
             onTap: () => cart.decrease(product),
           ),
-
-          /// Editable quantity field (fixed width for 3 digits)
           SizedBox(
-            width: 50, // Fixed width for max 3 digits
+            width: 50,
             child: TextField(
               controller: controller,
               textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
+              keyboardType:
+                  TextInputType.number,
               inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
+                FilteringTextInputFormatter
+                    .digitsOnly,
                 LengthLimitingTextInputFormatter(
-                    3), // Max 3 digits
+                    3),
               ],
               decoration: const InputDecoration(
                 isDense: true,
                 border: InputBorder.none,
               ),
               style: const TextStyle(
-                fontWeight: FontWeight.bold,
+                fontWeight:
+                    FontWeight.bold,
               ),
               onSubmitted: (value) {
                 final newQty =
@@ -253,8 +333,6 @@ class _CartPageState extends State<CartPage> {
               },
             ),
           ),
-
-          /// Increase button
           _qtyBtn(
             icon: Icons.add,
             onTap: () =>
@@ -296,8 +374,6 @@ class _CartPageState extends State<CartPage> {
               '\$${total.toStringAsFixed(2)}',
               bold: true),
           const SizedBox(height: 16),
-
-          /// Checkout button
           GestureDetector(
             onTap: () =>
                 context.push('/cart/checkout'),
@@ -325,7 +401,6 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  /// ===================== SUMMARY ROW =====================
   static Widget _row(
     String left,
     String right, {
@@ -361,7 +436,6 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  /// ===================== QUANTITY BUTTON =====================
   static Widget _qtyBtn({
     required IconData icon,
     required VoidCallback onTap,
