@@ -35,7 +35,7 @@ class FavoriteManager with ChangeNotifier {
     final encodedList = _favorites.map((product) {
       return jsonEncode({
         'id': product.id,
-        'title': product.title,
+        'name': product.name,
         'price': product.price,
         'oldPrice': product.oldPrice,
         'imagePath': product.imagePath,
@@ -54,7 +54,8 @@ class FavoriteManager with ChangeNotifier {
         final decoded = jsonDecode(item);
         return Product(
           id: decoded['id'],
-          title: decoded['title'],
+          name: decoded['name'],
+          category: decoded['category'],
           price: decoded['price'],
           oldPrice: decoded['oldPrice'],
           imagePath: decoded['imagePath'],

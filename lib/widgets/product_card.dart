@@ -46,7 +46,7 @@ class ProductCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          product.title,
+                          product.name,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -170,7 +170,7 @@ class _AddButtonState extends State<_AddButton> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${widget.product.title} added to cart'),
+        content: Text('${widget.product.name} added to cart'),
         duration: const Duration(milliseconds: 1500),
         behavior: SnackBarBehavior.floating,
       ),

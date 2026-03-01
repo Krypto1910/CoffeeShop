@@ -46,7 +46,7 @@ class HeroSection extends StatelessWidget {
               Expanded(
                 child: GestureDetector(
                   onTap: () {
-                    context.push('/home/search');
+                    // edit after 
                   },
                   child: Container(
                     height: 48,

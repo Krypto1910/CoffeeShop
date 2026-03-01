@@ -49,7 +49,7 @@ class _CartPageState extends State<CartPage> {
                       size: 60, color: Colors.grey),
                   SizedBox(height: 12),
                   Text(
-                    'Your cart is empty ☕',
+                    'Your cart is empty',
                     style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ],
@@ -143,7 +143,7 @@ class _CartPageState extends State<CartPage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        product.title,
+                                        product.name,
                                         style: const TextStyle(
                                           fontWeight:
                                               FontWeight.bold,

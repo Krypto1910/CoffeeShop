@@ -93,13 +93,6 @@ class BottomNavBar extends StatelessWidget {
 final GoRouter appRouter = GoRouter(
   initialLocation: '/home',
   routes: [
-    GoRoute(
-      path: '/product',
-      builder: (context, state) {
-        final product = state.extra as Product;
-        return ProductDetailPage(product: product);
-      },
-    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return BottomNavBar(navigationShell: navigationShell);
@@ -110,14 +103,20 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: '/home',
               builder: (context, state) => const HomePage(),
-              routes: [
+              routes: [          // /home/product  → ProductListPage
                 GoRoute(
-                  path: 'search',
-                  builder: (context, state) => const SearchPage(),
-                ),
-                GoRoute(
-                  path: 'products',
+                  path: 'product',
                   builder: (context, state) => const ProductListPage(),
+                  routes: [
+                    // /home/product/:id  → ProductDetailPage
+                    GoRoute(
+                      path: ':id',
+                      builder: (context, state) {
+                        final product = state.extra as Product;
+                        return ProductDetailPage(product: product);
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -128,6 +127,16 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: '/favorite',
               builder: (context, state) => const FavoritePage(),
+              routes: [
+                // /favorite/product/:id → ProductDetailPage
+                GoRoute(
+                  path: 'product/:id',
+                  builder: (context, state) {
+                    final product = state.extra as Product;
+                    return ProductDetailPage(product: product);
+                  },
+                ),
+              ],
             ),
           ],
         ),
