@@ -1,128 +1,193 @@
-import 'dart:async';
-import 'dart:developer' show log;
-
-import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:pocketbase/pocketbase.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import '../models/user.dart';
-import 'pocketbase_client.dart';
+import '../services/pb_client.dart';
 
-class AuthService {
-  void Function(User? user)? onAuthChange;
-  StreamSubscription? _authSubscription;
+class AuthProvider extends ChangeNotifier {
+  User? _user;
+  bool _initialized = false;
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  static const _callbackScheme = 'coffeenow';
+  User? get user => _user;
+  bool get isLoggedIn => _user != null;
+  bool get initialized => _initialized;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
-  AuthService({this.onAuthChange}) {
-    if (onAuthChange != null) {
-      _initAuthListener();
-    }
+  AuthProvider() {
+    _init();
   }
 
-  Future<void> _initAuthListener() async {
-    final pb = await getPocketbaseInstance();
-    _authSubscription = pb.authStore.onChange.listen((event) {
-      onAuthChange!(
-        event.record == null ? null : User.fromJson(event.record!.toJson()),
-      );
+  Future<void> _init() async {
+    final pb = await PbClient.instance;
+
+    pb.authStore.onChange.listen((event) {
+      _user = event.record != null ? _mapUser(event.record!) : null;
+      notifyListeners();
     });
+
+    if (pb.authStore.isValid && pb.authStore.record != null) {
+      _user = _mapUser(pb.authStore.record!);
+    }
+
+    _initialized = true;
+    notifyListeners();
   }
 
-  void dispose() {
-    _authSubscription?.cancel();
-  }
-
-  // ─── SIGNUP ──────────────────────────────────────────────────────
-  Future<User> signup(String email, String password, {String? name}) async {
-    final pb = await getPocketbaseInstance();
-    try {
+  // ─── SIGNUP ───────────────────────────────────────────────────────
+  Future<bool> signup(String email, String password) async {
+    return _run(() async {
+      final pb = await PbClient.instance;
       await pb.collection('users').create(body: {
         'email': email,
         'password': password,
         'passwordConfirm': password,
-        if (name != null && name.isNotEmpty) 'name': name,
       });
-      log('SIGNUP created: $email');
-      return await login(email, password);
-    } catch (error) {
-      log('SIGNUP ERROR: $error');
-      _handleError(error, prefix: 'SIGNUP');
-    }
-  }
-
-  // ─── LOGIN ───────────────────────────────────────────────────────
-  Future<User> login(String email, String password) async {
-    final pb = await getPocketbaseInstance();
-    try {
       final auth = await pb
           .collection('users')
           .authWithPassword(email, password);
-      log('LOGIN success: ${auth.record.id}');
-      return User.fromJson(auth.record.toJson());
-    } catch (error) {
-      log('LOGIN ERROR: $error');
-      _handleError(error, prefix: 'LOGIN');
-    }
+      return _mapUser(auth.record);
+    });
   }
 
-  // ─── OAUTH2 ──────────────────────────────────────────────────────
-  Future<User> loginWithOAuth2(String provider) async {
-    final pb = await getPocketbaseInstance();
-    try {
+  // ─── LOGIN ────────────────────────────────────────────────────────
+  Future<bool> login(String email, String password) async {
+    return _run(() async {
+      final pb = await PbClient.instance;
+      final auth = await pb
+          .collection('users')
+          .authWithPassword(email, password);
+      return _mapUser(auth.record);
+    });
+  }
+
+  // ─── OAUTH2 ───────────────────────────────────────────────────────
+  Future<bool> loginWithOAuth2(String provider) async {
+    return _run(() async {
+      final pb = await PbClient.instance;
       final auth = await pb.collection('users').authWithOAuth2(
         provider,
         (url) async {
-          // Mở browser và chờ callback về coffeenow://oauth2
-          await FlutterWebAuth2.authenticate(
-            url: url.toString(),
-            callbackUrlScheme: _callbackScheme,
-          );
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          } else {
+            throw Exception('Không thể mở trình duyệt');
+          }
         },
       );
-      log('OAUTH2 [$provider] success: ${auth.record.id}');
-      return User.fromJson(auth.record.toJson());
-    } catch (error) {
-      log('OAUTH2 [$provider] ERROR: $error');
-      _handleError(error, prefix: 'OAUTH2');
-    }
+      return _mapUser(auth.record);
+    });
   }
 
-  // ─── LOGOUT ──────────────────────────────────────────────────────
+  // ─── UPDATE PROFILE ───────────────────────────────────────────────
+  Future<bool> updateProfile({String? name, String? phone}) async {
+    return _run(() async {
+      final pb = await PbClient.instance;
+      final userId = _user?.id;
+      if (userId == null) throw Exception('Chưa đăng nhập');
+
+      final record = await pb.collection('users').update(
+        userId,
+        body: {
+          if (name != null) 'name': name,
+          if (phone != null) 'phone': phone,
+        },
+      );
+      return _mapUser(record);
+    });
+  }
+
+  // ─── UPLOAD AVATAR ────────────────────────────────────────────────
+  Future<bool> uploadAvatar(File imageFile) async {
+    return _run(() async {
+      final pb = await PbClient.instance;
+      final userId = _user?.id;
+      if (userId == null) throw Exception('Chưa đăng nhập');
+
+      // Dùng http.MultipartFile từ package http
+      final multipartFile = http.MultipartFile.fromBytes(
+        'avatar',
+        await imageFile.readAsBytes(),
+        filename: 'avatar_$userId.jpg',
+      );
+
+      final record = await pb.collection('users').update(
+        userId,
+        files: [multipartFile],
+      );
+      return _mapUser(record);
+    });
+  }
+
+  // ─── GET AVATAR URL ───────────────────────────────────────────────
+  String? getAvatarUrl() {
+    final u = _user;
+    if (u == null || u.avatar == null || u.avatar!.isEmpty) return null;
+    return '${PbClient.baseUrl}/api/files/users/${u.id}/${u.avatar}';
+  }
+
+  // ─── LOGOUT ───────────────────────────────────────────────────────
   Future<void> logout() async {
-    final pb = await getPocketbaseInstance();
+    final pb = await PbClient.instance;
     pb.authStore.clear();
-    log('LOGOUT: session cleared');
+    _user = null;
+    notifyListeners();
   }
 
-  // ─── RESTORE SESSION ─────────────────────────────────────────────
-  Future<User?> getUserFromStore() async {
-    final pb = await getPocketbaseInstance();
-    final record = pb.authStore.record;
-    if (record == null || !pb.authStore.isValid) {
-      log('SESSION: none or expired');
-      return null;
-    }
-    log('SESSION restored: ${record.id}');
-    return User.fromJson(record.toJson());
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
   }
 
-  // ─── ERROR HELPER ────────────────────────────────────────────────
-  Never _handleError(Object error, {required String prefix}) {
-    if (error is ClientException) {
-      log('$prefix response: ${error.response}');
-      final data = error.response['data'];
-      final message = error.response['message'];
+  // ─── MAP USER ─────────────────────────────────────────────────────
+  User _mapUser(RecordModel record) {
+    return User(
+      id: record.id,
+      email: record.getStringValue('email'),
+      name: record.getStringValue('name').isEmpty
+          ? null
+          : record.getStringValue('name'),
+      phone: record.getStringValue('phone').isEmpty
+          ? null
+          : record.getStringValue('phone'),
+      avatar: record.getStringValue('avatar').isEmpty
+          ? null
+          : record.getStringValue('avatar'),
+    );
+  }
+
+  // ─── RUN WRAPPER ──────────────────────────────────────────────────
+  Future<bool> _run(Future<User> Function() action) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _user = await action();
+      return true;
+    } on ClientException catch (e) {
+      final data = e.response['data'];
+      final message = e.response['message'];
       if (data != null && data is Map && data.isNotEmpty) {
-        final fieldErrors = data.entries
+        _errorMessage = data.entries
             .map((e) => '${e.key}: ${e.value['message'] ?? e.value}')
             .join('\n');
-        throw Exception(fieldErrors);
       } else if (message != null && message.toString().isNotEmpty) {
-        throw Exception(message.toString());
+        _errorMessage = message.toString();
       } else {
-        throw Exception('Server error ${error.statusCode}: ${error.response}');
+        _errorMessage = 'Lỗi server: ${e.statusCode}';
       }
+      return false;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-    throw Exception('An error occurred: $error');
   }
 }
