@@ -26,7 +26,7 @@ class AddressCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: address.isSelected
+            color: address.isDefault
                 ? const Color(0xFF6F4E37)
                 : Colors.transparent,
             width: 2,

@@ -1,99 +1,148 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.user;
+    final avatarUrl = auth.getAvatarUrl();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF6EFE8),
-
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text('Profile', style: TextStyle(color: Colors.black)),
         centerTitle: true,
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // ===== AVATAR =====
+            // ─── AVATAR + INFO ───────────────────────────────────────
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Column(
-                children: const [
+                children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundColor: Color(0xFF6F4E37),
-                    child: Icon(Icons.person, size: 48, color: Colors.white),
+                    backgroundColor: const Color(0xFF6F4E37),
+                    backgroundImage: avatarUrl != null
+                        ? NetworkImage(avatarUrl)
+                        : null,
+                    child: avatarUrl == null
+                        ? const Icon(Icons.person, size: 48, color: Colors.white)
+                        : null,
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Text(
-                    'Tong Khanh Linh',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    user?.displayName ?? '—',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
-                  SizedBox(height: 4),
-                  Text('linh@email.com', style: TextStyle(color: Colors.grey)),
+                  const SizedBox(height: 4),
+                  Text(
+                    user?.email ?? '',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  // Hiện phone nếu có
+                  if (user?.phone != null && user!.phone!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      user.phone!,
+                      style: const TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                  ],
                 ],
               ),
             ),
 
             const SizedBox(height: 24),
 
-            // ===== MENU =====
+            // ─── MENU ────────────────────────────────────────────────
             _ProfileItem(
               icon: Icons.edit,
               title: 'Edit Profile',
-              onTap: () {
-                context.push('/profile/edit');
-              },
+              onTap: () => context.push('/profile/edit'),
             ),
             _ProfileItem(
               icon: Icons.receipt_long,
               title: 'Order History',
-              onTap: () {
-                context.push('/profile/orders');
-              },
+              onTap: () => context.push('/profile/orders'),
             ),
             _ProfileItem(
               icon: Icons.location_on,
               title: 'My Address',
-              onTap: () {
-                context.push('/profile/addresses');
-              },
+              onTap: () => context.push('/profile/addresses'),
             ),
             _ProfileItem(
               icon: Icons.credit_card,
               title: 'Payment Method',
-              onTap: () {
-                context.push('/profile/payment');
-              },
+              onTap: () => context.push('/profile/payment'),
             ),
 
             const SizedBox(height: 12),
 
-            // ===== LOGOUT =====
+            // ─── LOGOUT ──────────────────────────────────────────────
             _ProfileItem(
               icon: Icons.logout,
               title: 'Logout',
               isLogout: true,
-              onTap: () {},
+              onTap: () => _confirmLogout(context, auth),
             ),
           ],
         ),
       ),
     );
   }
+
+  void _confirmLogout(BuildContext context, AuthProvider auth) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Đăng xuất'),
+        content: const Text('Bạn có chắc muốn đăng xuất không?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Huỷ'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(210, 223, 30, 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await auth.logout();
+            },
+            child: const Text(
+              'Đăng xuất',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-// ===== ITEM WIDGET =====
+// ─── ITEM WIDGET ─────────────────────────────────────────────────
 class _ProfileItem extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -132,7 +181,7 @@ class _ProfileItem extends StatelessWidget {
                 ),
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, size: 14),
+            const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
           ],
         ),
       ),

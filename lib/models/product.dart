@@ -1,17 +1,47 @@
 class Product {
-  final int id;
-  final String name;
-  final String category;
+  final String id;
+  final String categoryID;
+  final String title;
   final double price;
-  final double oldPrice;
-  final String imagePath;
+  final int stock;
+  final String description;
+  final String imagePath; // tên file trong PocketBase Files
 
-  Product({
+  const Product({
     required this.id,
-    required this.name,
-    required this.category,
+    required this.categoryID,
+    required this.title,
     required this.price,
-    required this.oldPrice,
+    required this.stock,
+    required this.description,
     required this.imagePath,
   });
+
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      id: json['id'] ?? '',
+      categoryID: json['categoryID'] ?? '',
+      title: json['title'] ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0,
+      stock: (json['stock'] as num?)?.toInt() ?? 0,
+      description: json['description'] ?? '',
+      imagePath: json['imagePath'] ?? '',
+    );
+  }
+
+  /// URL ảnh đầy đủ từ PocketBase
+  /// baseUrl: http://10.0.2.2:8090 hoặc http://127.0.0.1:8090
+  String imageUrl(String baseUrl) {
+    if (imagePath.isEmpty) return '';
+    // PocketBase file URL format:
+    // /api/files/{collectionName}/{recordId}/{fileName}
+    return '$baseUrl/api/files/Product/$id/$imagePath';
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is Product && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

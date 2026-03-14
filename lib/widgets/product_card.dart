@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import '../models/product.dart';
 import 'package:provider/provider.dart';
 import '../ui/favorite/favorite_manager.dart';
 import '../ui/cart/cart_manager.dart';
+import '../providers/auth_provider.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -13,6 +13,9 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cart = context.read<CartManager>();
+    final imageUrl = product.imageUrl(cart.baseUrl);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -29,42 +32,57 @@ class ProductCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// IMAGE
+                  // ─── IMAGE ──────────────────────────────────────────
                   SizedBox(
                     height: 130,
                     width: double.infinity,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(product.imagePath, fit: BoxFit.cover),
+                      child: imageUrl.isNotEmpty
+                          ? Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _imageFallback(),
+                              loadingBuilder: (_, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  color: const Color(0xFFEFE3D3),
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      color: Color(0xFF6F4E37),
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          : _imageFallback(),
                     ),
                   ),
 
                   const SizedBox(height: 10),
 
-                  /// TITLE + HEART
+                  // ─── TITLE + HEART ──────────────────────────────────
                   Row(
                     children: [
                       Expanded(
                         child: Text(
-                          product.name,
+                          product.title,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
                           overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
                         ),
                       ),
-
                       Padding(
-                        padding: const EdgeInsets.only(left: 18),
+                        padding: const EdgeInsets.only(left: 8),
                         child: Consumer<FavoriteManager>(
-                          builder: (context, favManager, child) {
+                          builder: (context, favManager, _) {
                             final isFav = favManager.isFavorite(product.id);
-
                             return GestureDetector(
-                              onTap: () {
-                                favManager.toggleFavorite(product);
-                              },
+                              onTap: () => favManager.toggleFavorite(product),
                               child: TweenAnimationBuilder<double>(
                                 duration: const Duration(milliseconds: 150),
                                 tween: Tween(
@@ -72,25 +90,16 @@ class ProductCard extends StatelessWidget {
                                   end: isFav ? 1.2 : 1.0,
                                 ),
                                 curve: Curves.easeOutBack,
-                                builder: (context, scale, child) {
-                                  return Transform.scale(
-                                    scale: scale,
-                                    child: AnimatedContainer(
-                                      duration: const Duration(
-                                        milliseconds: 50,
-                                      ),
-                                      padding: const EdgeInsets.all(4),
-
-                                      child: Icon(
-                                        isFav
-                                            ? Icons.favorite
-                                            : Icons.favorite_border,
-                                        size: 22,
-                                        color: isFav ? Colors.red : Colors.grey,
-                                      ),
-                                    ),
-                                  );
-                                },
+                                builder: (_, scale, __) => Transform.scale(
+                                  scale: scale,
+                                  child: Icon(
+                                    isFav
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    size: 22,
+                                    color: isFav ? Colors.red : Colors.grey,
+                                  ),
+                                ),
                               ),
                             );
                           },
@@ -101,51 +110,44 @@ class ProductCard extends StatelessWidget {
 
                   const SizedBox(height: 6),
 
-                  /// PRICE
-                  Row(
-                    children: [
-                      Text(
-                        '\$${product.price.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF6F4E37),
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '\$${product.oldPrice.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                          decoration: TextDecoration.lineThrough,
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                  // ─── PRICE ──────────────────────────────────────────
+                  Text(
+                    '\$${product.price.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF6F4E37),
+                      fontSize: 14,
+                    ),
                   ),
                 ],
               ),
             ),
 
-            /// ADD BUTTON (bottom right)
+            // ─── ADD TO CART BUTTON ─────────────────────────────────
             Positioned(
               bottom: 0,
               right: 0,
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: _AddButton(product: product),
-              ),
+              child: _AddButton(product: product),
             ),
           ],
         ),
       ),
     );
   }
+
+  Widget _imageFallback() {
+    return Container(
+      color: const Color(0xFFEFE3D3),
+      child: const Center(
+        child: Icon(Icons.coffee, color: Color(0xFF6F4E37), size: 40),
+      ),
+    );
+  }
 }
 
+// ─── ADD BUTTON ───────────────────────────────────────────────────
 class _AddButton extends StatefulWidget {
   final Product product;
-
   const _AddButton({required this.product});
 
   @override
@@ -155,26 +157,27 @@ class _AddButton extends StatefulWidget {
 class _AddButtonState extends State<_AddButton> {
   bool _animate = false;
 
-  void _handleTap() async {
+  Future<void> _handleTap() async {
     setState(() => _animate = true);
-
-    // chờ animation scale xuống
     await Future.delayed(const Duration(milliseconds: 100));
-
     setState(() => _animate = false);
 
-    // Add to cart
-    context.read<CartManager>().addToCart(widget.product);
+    final userId = context.read<AuthProvider>().user?.id;
+    if (userId == null) return;
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    await context.read<CartManager>().addToCart(userId, widget.product);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${widget.product.name} added to cart'),
-        duration: const Duration(milliseconds: 1500),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('${widget.product.title} added to cart'),
+            duration: const Duration(milliseconds: 1500),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+    }
   }
 
   @override
