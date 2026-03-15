@@ -22,6 +22,7 @@ class _MyAddressPageState extends State<MyAddressPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userId = context.read<AuthProvider>().user?.id;
       if (userId != null) {
+        print('Fetching addresses for userId: $userId');
         context.read<AddressManager>().fetchAddresses(userId);
       }
     });

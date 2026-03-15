@@ -5,7 +5,7 @@ class Product {
   final double price;
   final int stock;
   final String description;
-  final String imagePath; // tên file trong PocketBase Files
+  final String imagePath; 
 
   const Product({
     required this.id,

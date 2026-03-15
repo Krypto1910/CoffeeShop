@@ -7,6 +7,7 @@ import 'ui/favorite/favorite_manager.dart';
 import 'ui/cart/cart_manager.dart';
 import 'ui/address/address_manager.dart';
 import 'ui/product/product_manager.dart';
+import 'ui/order/order_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +52,7 @@ class _CoffeeAppState extends State<CoffeeApp> {
         ChangeNotifierProvider(create: (_) => CartManager()),
         ChangeNotifierProvider(create: (_) => AddressManager()),
         ChangeNotifierProvider(create: (_) => ProductManager()),
+        ChangeNotifierProvider(create: (_) => OrderManager()),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,

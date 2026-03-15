@@ -74,7 +74,7 @@ class _HomePageState extends State<HomePage> {
                                 color: isSelected
                                     ? const Color(0xFF6F4E37)
                                     : Colors.white,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(30),
                               ),
                               child: Text(
                                 catName,

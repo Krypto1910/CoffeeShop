@@ -34,7 +34,7 @@ class AddressManager extends ChangeNotifier {
 
       final records = await pb.collection('Address').getFullList(
         filter: 'userID = "$userId"',
-        sort: '-isDefault,created',
+        sort: '-isDefault',
       );
 
       debugPrint('FOUND ${records.length} addresses');
