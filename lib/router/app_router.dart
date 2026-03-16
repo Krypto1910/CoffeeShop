@@ -12,7 +12,7 @@ import '../ui/profile/profile_page.dart';
 import '../ui/profile/edit_profile_page.dart';
 import '../ui/order/order_history_page.dart';
 import '../ui/address/my_address_page.dart';
-import '../ui/checkout/payment_method_page.dart';
+import '../ui/payment_method/payment_method_page.dart';
 import '../ui/checkout/checkout_page.dart';
 import '../ui/checkout/order_success_page.dart';
 import '../ui/product/product_detail_page.dart';

@@ -137,7 +137,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                 child: Text(
                   'Continue',
                   style: TextStyle(
-                    color: Colors.white, // ✅ chữ trắng như bạn yêu cầu
+                    color: Colors.white, 
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
