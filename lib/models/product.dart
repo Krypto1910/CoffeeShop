@@ -5,7 +5,7 @@ class Product {
   final double price;
   final int stock;
   final String description;
-  final String imagePath; 
+  final String imagePath;
 
   const Product({
     required this.id,
@@ -30,12 +30,12 @@ class Product {
   }
 
   /// URL ảnh đầy đủ từ PocketBase
-  /// baseUrl: http://10.0.2.2:8090 hoặc http://127.0.0.1:8090
+  /// baseUrl: http://10.0.2.2:8090/ hoặc http://127.0.0.1:8090/
   String imageUrl(String baseUrl) {
     if (imagePath.isEmpty) return '';
     // PocketBase file URL format:
     // /api/files/{collectionName}/{recordId}/{fileName}
-    return '$baseUrl/api/files/Product/$id/$imagePath';
+    return '$baseUrl/api/files/product/$id/$imagePath';
   }
 
   @override

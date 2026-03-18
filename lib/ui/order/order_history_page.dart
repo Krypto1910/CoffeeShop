@@ -33,26 +33,42 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
-        title: const Text('Order History',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Order History',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
       ),
-      body: orderMgr.isLoading && orderMgr.orders.isEmpty
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF6F4E37)))
-          : orderMgr.orders.isEmpty
-              ? _buildEmpty()
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: orderMgr.orders.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final order = orderMgr.orders[index];
-                    return _OrderCard(
-                      order: order,
-                      onTap: () => _showOrderDetail(context, order, orderMgr),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          final userId = context.read<AuthProvider>().user?.id;
+          if (userId != null) {
+            await context.read<OrderManager>().fetchOrders(userId);
+          }
+        },
+        child: orderMgr.isLoading && orderMgr.orders.isEmpty
+            ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFF6F4E37)),
+              )
+            : ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                itemCount: orderMgr.orders.isEmpty ? 1 : orderMgr.orders.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  if (orderMgr.orders.isEmpty) {
+                    return SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.7,
+                      child: _buildEmpty(),
                     );
-                  },
-                ),
+                  }
+                  final order = orderMgr.orders[index];
+                  return _OrderCard(
+                    order: order,
+                    onTap: () => _showOrderDetail(context, order, orderMgr),
+                  );
+                },
+              ),
+      ),
     );
   }
 
@@ -67,23 +83,32 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
               color: Color(0xFFEFE3D3),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.receipt_long_outlined,
-                size: 48, color: Color(0xFF6F4E37)),
+            child: const Icon(
+              Icons.receipt_long_outlined,
+              size: 48,
+              color: Color(0xFF6F4E37),
+            ),
           ),
           const SizedBox(height: 16),
-          const Text('No orders yet',
-              style:
-                  TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            'No orders yet',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
-          Text('Your order history will appear here',
-              style: TextStyle(color: Colors.grey[500])),
+          Text(
+            'Your order history will appear here',
+            style: TextStyle(color: Colors.grey[500]),
+          ),
         ],
       ),
     );
   }
 
   void _showOrderDetail(
-      BuildContext context, OrderModel order, OrderManager mgr) {
+    BuildContext context,
+    OrderModel order,
+    OrderManager mgr,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -112,10 +137,7 @@ class _OrderCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-            ),
+            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8),
           ],
         ),
         child: Column(
@@ -152,8 +174,11 @@ class _OrderCard extends StatelessWidget {
 
             Row(
               children: [
-                Icon(Icons.location_on_outlined,
-                    size: 14, color: Colors.grey[400]),
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 14,
+                  color: Colors.grey[400],
+                ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -173,8 +198,11 @@ class _OrderCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(_paymentIcon(order.paymentMethod),
-                        size: 16, color: Colors.grey[500]),
+                    Icon(
+                      _paymentIcon(order.paymentMethod),
+                      size: 16,
+                      color: Colors.grey[500],
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       _paymentLabel(order.paymentMethod),
@@ -289,12 +317,12 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
   }
 
   Future<void> _load() async {
-    final items =
-        await widget.manager.fetchOrderItems(widget.order.id);
-    if (mounted) setState(() {
-      _items = items;
-      _loading = false;
-    });
+    final items = await widget.manager.fetchOrderItems(widget.order.id);
+    if (mounted)
+      setState(() {
+        _items = items;
+        _loading = false;
+      });
   }
 
   @override
@@ -329,7 +357,10 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
           const SizedBox(height: 4),
           Text(
             '\$${widget.order.totalAmount.toStringAsFixed(2)} · ${widget.order.statusLabel}',
-            style: const TextStyle(color: Color(0xFF6F4E37), fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              color: Color(0xFF6F4E37),
+              fontWeight: FontWeight.w600,
+            ),
           ),
 
           const SizedBox(height: 16),
@@ -339,32 +370,38 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
           // Items
           if (_loading)
             const Center(
-                child: CircularProgressIndicator(color: Color(0xFF6F4E37)))
+              child: CircularProgressIndicator(color: Color(0xFF6F4E37)),
+            )
           else if (_items.isEmpty)
             const Text('No items', style: TextStyle(color: Colors.grey))
           else
-            ..._items.map((item) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.productTitle ?? 'Product',
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
+            ..._items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.productTitle ?? 'Product',
+                        style: const TextStyle(fontWeight: FontWeight.w500),
                       ),
-                      Text('x${item.quantity}',
-                          style: const TextStyle(color: Colors.grey)),
-                      const SizedBox(width: 12),
-                      Text(
-                        '\$${item.subtotal.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF6F4E37)),
+                    ),
+                    Text(
+                      'x${item.quantity}',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '\$${item.subtotal.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF6F4E37),
                       ),
-                    ],
-                  ),
-                )),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
           const SizedBox(height: 8),
           const Divider(),
@@ -385,8 +422,10 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
         Icon(icon, size: 16, color: Colors.grey[500]),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(text,
-              style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+          child: Text(
+            text,
+            style: TextStyle(color: Colors.grey[600], fontSize: 13),
+          ),
         ),
       ],
     );

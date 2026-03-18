@@ -46,7 +46,7 @@ class HeroSection extends StatelessWidget {
               Expanded(
                 child: GestureDetector(
                   onTap: () {
-                    // edit after 
+                    context.push('/home/search');
                   },
                   child: Container(
                     height: 48,
@@ -66,21 +66,24 @@ class HeroSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Container(
-                height: 48,
-                width: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6F4E37),
-                  borderRadius: BorderRadius.circular(16),
+              GestureDetector(
+                onTap: () => context.push('/home/search'),
+                child: Container(
+                  height: 48,
+                  width: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6F4E37),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.tune, color: Colors.white),
                 ),
-                child: const Icon(Icons.tune, color: Colors.white),
               ),
             ],
           ),
 
           const SizedBox(height: 24),
 
-          // Hero image placeholder (sau thay bằng Image)
+          // Hero image placeholder (sau thay báº±ng Image)
           Center(
             child: Container(
               height: 160,

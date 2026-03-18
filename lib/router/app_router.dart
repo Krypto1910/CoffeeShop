@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/auth_provider.dart';
 import '../ui/auth/splash_page.dart';
 import '../ui/auth/login_page.dart';
@@ -13,15 +14,21 @@ import '../ui/profile/edit_profile_page.dart';
 import '../ui/order/order_history_page.dart';
 import '../ui/address/my_address_page.dart';
 import '../ui/payment_method/payment_method_page.dart';
+import '../ui/payment_method/add_payment_page.dart';
 import '../ui/checkout/checkout_page.dart';
 import '../ui/checkout/order_success_page.dart';
 import '../ui/product/product_detail_page.dart';
 import '../ui/product/product_list_page.dart';
 import '../ui/checkout/choose_address_page.dart';
+import '../ui/search/search_page.dart'; // 🔥 ADD
+
 import '../models/product.dart';
+
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 GoRouter createAppRouter(AuthProvider authProvider) {
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: '/splash',
     refreshListenable: authProvider,
 
@@ -42,98 +49,131 @@ GoRouter createAppRouter(AuthProvider authProvider) {
       GoRoute(path: '/splash', builder: (_, __) => const SplashPage()),
       GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
 
+      GoRoute(
+        path: '/payment/add',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final type = state.uri.queryParameters['type'] ?? 'card';
+          return AddPaymentPage(type: type);
+        },
+      ),
+
+      // 🔥 MAIN SHELL
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             BottomNavBar(navigationShell: navigationShell),
+
         branches: [
-          // HOME
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/home',
-              builder: (_, __) => const HomePage(),
-              routes: [
-                GoRoute(
-                  path: 'product',
-                  builder: (_, __) => const ProductListPage(),
-                  routes: [
-                    GoRoute(
-                      path: ':id',
-                      builder: (_, state) =>
-                          ProductDetailPage(product: state.extra as Product),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ]),
+          // ─── HOME ─────────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (_, __) => const HomePage(),
+                routes: [
+                  // 🔥 ADD SEARCH PAGE
+                  GoRoute(
+                    path: 'search',
+                    builder: (_, __) => const SearchPage(),
+                  ),
 
-          // FAVORITE
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/favorite',
-              builder: (_, __) => const FavoritePage(),
-              routes: [
-                GoRoute(
-                  path: 'product/:id',
-                  builder: (_, state) =>
-                      ProductDetailPage(product: state.extra as Product),
-                ),
-              ],
-            ),
-          ]),
+                  GoRoute(
+                    path: 'product',
+                    builder: (_, __) => const ProductListPage(),
+                    routes: [
+                      GoRoute(
+                        path: ':id',
+                        builder: (_, state) =>
+                            ProductDetailPage(product: state.extra as Product),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
 
-          // CART
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/cart',
-              builder: (_, __) => const CartPage(),
-              routes: [
-                GoRoute(
-                  path: 'checkout',
-                  builder: (_, __) => const CheckoutPage(),
-                  routes: [
-                    GoRoute(
+          // ─── FAVORITE ─────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/favorite',
+                builder: (_, __) => const FavoritePage(),
+                routes: [
+                  GoRoute(
+                    path: 'product/:id',
+                    builder: (_, state) =>
+                        ProductDetailPage(product: state.extra as Product),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // ─── CART ─────────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/cart',
+                builder: (_, __) => const CartPage(),
+                routes: [
+                  GoRoute(
+                    path: 'checkout',
+                    builder: (_, __) => const CheckoutPage(),
+                    routes: [
+                      GoRoute(
                         path: 'address',
-                        builder: (_, __) => const ChooseAddressPage()),
-                    GoRoute(
+                        builder: (_, __) => const ChooseAddressPage(),
+                      ),
+                      GoRoute(
                         path: 'payment',
-                        builder: (_, __) => const PaymentMethodPage()),
-                    GoRoute(
+                        builder: (_, __) => const PaymentMethodPage(),
+                      ),
+                      GoRoute(
                         path: 'success',
-                        builder: (_, __) => const OrderSuccessPage()),
-                  ],
-                ),
-              ],
-            ),
-          ]),
+                        builder: (_, __) => const OrderSuccessPage(),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
 
-          // PROFILE
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/profile',
-              builder: (_, __) => const ProfilePage(),
-              routes: [
-                GoRoute(
-                    path: 'edit', builder: (_, __) => const EditProfilePage()),
-                GoRoute(
+          // ─── PROFILE ─────────────────────────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (_, __) => const ProfilePage(),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (_, __) => const EditProfilePage(),
+                  ),
+                  GoRoute(
                     path: 'orders',
-                    builder: (_, __) => const OrderHistoryPage()),
-                GoRoute(
+                    builder: (_, __) => const OrderHistoryPage(),
+                  ),
+                  GoRoute(
                     path: 'addresses',
-                    builder: (_, __) => const MyAddressPage()),
-                GoRoute(
+                    builder: (_, __) => const MyAddressPage(),
+                  ),
+                  GoRoute(
                     path: 'payment',
-                    builder: (_, __) => const PaymentMethodPage()),
-              ],
-            ),
-          ]),
+                    builder: (_, __) => const PaymentMethodPage(),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
     ],
   );
 }
 
-// ─── BOTTOM NAV WITH CART BADGE ──────────────────────────────────
+// ─── BOTTOM NAV BAR ─────────────────
 class BottomNavBar extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
   const BottomNavBar({super.key, required this.navigationShell});
@@ -149,95 +189,26 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: Material(color: Colors.transparent, child: navigationShell),
+      ),
       bottomNavigationBar: _isRootRoute(context)
-          ? Theme(
-              data: Theme.of(context).copyWith(
-                splashFactory: InkRipple.splashFactory,
-                splashColor: const Color(0xFF6F4E37).withOpacity(0.12),
-                highlightColor: Colors.transparent,
-              ),
-              child: BottomNavigationBar(
-                currentIndex: navigationShell.currentIndex,
-                onTap: (i) =>
-                    navigationShell.goBranch(i, initialLocation: true),
-                type: BottomNavigationBarType.fixed,
-                backgroundColor: Colors.white,
-                selectedItemColor: const Color(0xFF6F4E37),
-                showSelectedLabels: false,
-                showUnselectedLabels: false,
-                enableFeedback: false,
-                elevation: 8,
-                items: [
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.home_outlined),
-                    activeIcon: Icon(Icons.home),
-                    label: '',
-                  ),
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.favorite_border),
-                    activeIcon: Icon(Icons.favorite),
-                    label: '',
-                  ),
-
-                  // Cart với badge
-                  BottomNavigationBarItem(
-                    icon: _CartIcon(isActive: false),
-                    activeIcon: _CartIcon(isActive: true),
-                    label: '',
-                  ),
-
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.person_outline),
-                    activeIcon: Icon(Icons.person),
-                    label: '',
-                  ),
-                ],
-              ),
+          ? BottomNavigationBar(
+              currentIndex: navigationShell.currentIndex,
+              onTap: (i) => navigationShell.goBranch(i, initialLocation: true),
+              type: BottomNavigationBarType.fixed,
+              items: const [
+                BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+                BottomNavigationBarItem(icon: Icon(Icons.favorite), label: ''),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.shopping_cart),
+                  label: '',
+                ),
+                BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+              ],
             )
           : null,
-    );
-  }
-}
-
-// ─── CART ICON WITH BADGE ────────────────────────────────────────
-class _CartIcon extends StatelessWidget {
-  final bool isActive;
-  const _CartIcon({required this.isActive});
-
-  @override
-  Widget build(BuildContext context) {
-    final totalItems = context.watch<CartManager>().totalItems;
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Icon(
-          isActive ? Icons.shopping_bag : Icons.shopping_bag_outlined,
-        ),
-        if (totalItems > 0)
-          Positioned(
-            top: -6,
-            right: -8,
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              decoration: const BoxDecoration(
-                color: Color(0xFFD45A32),
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                totalItems > 99 ? '99+' : '$totalItems',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-      ],
     );
   }
 }

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import 'payment_method_manager.dart';
 
 class PaymentMethodPage extends StatefulWidget {
   const PaymentMethodPage({super.key});
@@ -8,145 +11,128 @@ class PaymentMethodPage extends StatefulWidget {
 }
 
 class _PaymentMethodPageState extends State<PaymentMethodPage> {
-  int selectedIndex = 0;
+  @override
+  void initState() {
+    super.initState();
+    final userId = context.read<AuthProvider>().user?.id;
+    if (userId != null) {
+      context.read<PaymentMethodManager>().fetch(userId);
+    }
+  }
 
-  final List<Map<String, dynamic>> methods = [
-    {'title': 'Credit / Debit Card', 'icon': Icons.credit_card},
-    {'title': 'E-Wallet', 'icon': Icons.account_balance_wallet_outlined},
-    {'title': 'Cash on Delivery', 'icon': Icons.payments_outlined},
-  ];
+  void _showAddDialog(bool isCard) {
+    final numberCtrl = TextEditingController();
+    final nameCtrl = TextEditingController();
+    final expiryCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isCard ? 'Add Card' : 'Add E-Wallet'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: numberCtrl,
+              decoration: const InputDecoration(labelText: 'Number'),
+            ),
+            TextField(
+              controller: nameCtrl,
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            if (isCard)
+              TextField(
+                controller: expiryCtrl,
+                decoration: const InputDecoration(labelText: 'Expiry'),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx), // ✅ FIX
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final userId = context.read<AuthProvider>().user?.id;
+
+              if (userId == null) return;
+
+              await context.read<PaymentMethodManager>().add(
+                userId: userId,
+                type: isCard ? 'card' : 'ewallet',
+                provider: isCard ? 'visa' : 'momo',
+                number: numberCtrl.text.trim(),
+                name: nameCtrl.text.trim(),
+                expiry: expiryCtrl.text.trim(),
+              );
+
+              if (!mounted) return;
+
+              // 🔥 Reload lại list
+              await context.read<PaymentMethodManager>().fetch(userId);
+
+              Navigator.pop(ctx); // ✅ FIX QUAN TRỌNG
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _maskNumber(String number) {
+    if (number.isEmpty) return '';
+    if (number.length < 4) return number;
+    return '**** ${number.substring(number.length - 4)}';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final mgr = context.watch<PaymentMethodManager>();
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF6EFE8),
-
-      // ===== APP BAR =====
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: const BackButton(color: Colors.black),
-        title: const Text(
-          'Payment Method',
-          style: TextStyle(color: Colors.black),
-        ),
-      ),
-
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // ===== PAYMENT LIST =====
-            Expanded(
-              child: ListView.separated(
-                itemCount: methods.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final isSelected = selectedIndex == index;
-
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedIndex = index;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected
-                              ? const Color(0xFF6F4E37)
-                              : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          // ICON
-                          Container(
-                            height: 44,
-                            width: 44,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF3E1D2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              methods[index]['icon'],
-                              color: const Color(0xFF6F4E37),
-                            ),
-                          ),
-
-                          const SizedBox(width: 12),
-
-                          // TITLE
-                          Expanded(
-                            child: Text(
-                              methods[index]['title'],
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-
-                          // RADIO
-                          Container(
-                            height: 22,
-                            width: 22,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: const Color(0xFF6F4E37),
-                                width: 2,
-                              ),
-                            ),
-                            child: isSelected
-                                ? Center(
-                                    child: Container(
-                                      height: 12,
-                                      width: 12,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Color(0xFF6F4E37),
-                                      ),
-                                    ),
-                                  )
-                                : null,
-                          ),
-                        ],
-                      ),
+      appBar: AppBar(title: const Text('Payment Methods')),
+      body: mgr.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                if (mgr.methods.isEmpty)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 40),
+                      child: Text('No payment methods yet'),
                     ),
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // ===== CONTINUE BUTTON =====
-            Container(
-              height: 56,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFF6F4E37),
-                borderRadius: BorderRadius.circular(28),
-              ),
-              child: const Center(
-                child: Text(
-                  'Continue',
-                  style: TextStyle(
-                    color: Colors.white, 
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
                   ),
+
+                ...mgr.methods.map((m) {
+                  final number = m.accountNumber ?? '';
+
+                  return ListTile(
+                    leading: Icon(
+                      m.type == 'card'
+                          ? Icons.credit_card
+                          : Icons.account_balance_wallet,
+                    ),
+                    title: Text(m.accountName ?? ''),
+                    subtitle: Text(_maskNumber(number)),
+                  );
+                }),
+
+                const SizedBox(height: 20),
+
+                ElevatedButton(
+                  onPressed: () => _showAddDialog(true),
+                  child: const Text('Add Card'),
                 ),
-              ),
+
+                ElevatedButton(
+                  onPressed: () => _showAddDialog(false),
+                  child: const Text('Add E-Wallet'),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
     );
   }
 }

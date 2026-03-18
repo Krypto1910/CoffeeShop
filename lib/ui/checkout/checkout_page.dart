@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/auth_provider.dart';
 import '../../ui/cart/cart_manager.dart';
 import '../../ui/address/address_manager.dart';
 import '../../ui/order/order_manager.dart';
+import '../../ui/payment_method/payment_method_manager.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
@@ -14,23 +16,51 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
-  String _paymentMethod = 'cash';
-
-  static const _paymentOptions = [
-    {'value': 'cash', 'label': 'Cash on Delivery', 'icon': Icons.payments_outlined},
-    {'value': 'card', 'label': 'Credit / Debit Card', 'icon': Icons.credit_card},
-    {'value': 'ewallet', 'label': 'E-Wallet', 'icon': Icons.account_balance_wallet_outlined},
-  ];
+  String? _paymentMethodId;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userId = context.read<AuthProvider>().user?.id;
       if (userId != null) {
-        context.read<AddressManager>().fetchAddresses(userId);
+        await context.read<AddressManager>().fetchAddresses(userId);
+
+        final paymentMgr = context.read<PaymentMethodManager>();
+        await paymentMgr.fetch(userId);
+
+        // ✅ AUTO CHỌN DEFAULT METHOD (Hoặc chọn COD làm mặc định ban đầu)
+        if (paymentMgr.methods.isNotEmpty) {
+          final defaultMethod = paymentMgr.methods.firstWhere(
+            (e) => e.isDefault == true,
+            orElse: () => paymentMgr.methods.first,
+          );
+          setState(() {
+            _paymentMethodId = defaultMethod.id;
+          });
+        } else {
+          setState(() {
+            _paymentMethodId = 'cod';
+          });
+        }
       }
     });
+  }
+
+  /// Hàm hỗ trợ lấy Icon cho phương thức thanh toán
+  Widget _getIcon(String provider) {
+    switch (provider.toLowerCase()) {
+      case 'momo':
+        return const Icon(Icons.account_balance_wallet, color: Colors.pink);
+      case 'zalopay':
+        return const Icon(Icons.account_balance_wallet, color: Colors.blue);
+      case 'visa':
+      case 'mastercard':
+        return const Icon(Icons.credit_card, color: Colors.indigo);
+      default:
+        return const Icon(Icons.payment, color: Colors.grey);
+    }
   }
 
   Future<void> _placeOrder() async {
@@ -42,10 +72,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final userId = auth.user?.id;
     if (userId == null) return;
 
-    // Kiểm tra có địa chỉ không
     final defaultAddr = addressMgr.defaultAddress;
     if (defaultAddr == null) {
       _showSnack('Vui lòng chọn địa chỉ giao hàng', isError: true);
+      return;
+    }
+
+    if (_paymentMethodId == null) {
+      _showSnack('Vui lòng chọn phương thức thanh toán', isError: true);
       return;
     }
 
@@ -61,14 +95,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
       userId: userId,
       cartItems: cart.items.toList(),
       address: addressText,
-      paymentMethod: _paymentMethod,
+      paymentMethod: _paymentMethodId!,
       totalAmount: total,
     );
 
     if (!mounted) return;
 
     if (success) {
-      // Clear cart sau khi đặt hàng thành công
       await cart.clearCart();
       context.go('/cart/checkout/success');
     } else {
@@ -80,10 +113,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: isError ? Colors.red[700] : const Color(0xFF6F4E37),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
+        backgroundColor: isError ? Colors.red : const Color(0xFF6F4E37),
       ),
     );
   }
@@ -93,6 +123,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final cart = context.watch<CartManager>();
     final addressMgr = context.watch<AddressManager>();
     final orderMgr = context.watch<OrderManager>();
+    final paymentMgr = context.watch<PaymentMethodManager>();
+
     final defaultAddr = addressMgr.defaultAddress;
 
     final subtotal = cart.subtotal;
@@ -104,9 +136,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF6EFE8),
       appBar: AppBar(
-        title: const Text('Checkout',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        centerTitle: true,
+        title: const Text(
+          'Checkout',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
@@ -116,7 +149,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ─── DELIVERY ADDRESS ──────────────────────────────────
+            /// ─── ADDRESS ─────────────────────────────
             _sectionTitle('Delivery Address'),
             const SizedBox(height: 8),
             GestureDetector(
@@ -126,214 +159,213 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: defaultAddr == null
-                      ? Border.all(color: Colors.red.withOpacity(0.5))
-                      : null,
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFE3D3),
-                        borderRadius: BorderRadius.circular(10),
+                child: defaultAddr != null
+                    ? Text('${defaultAddr.title}: ${defaultAddr.detail}')
+                    : const Text(
+                        'Chọn địa chỉ giao hàng',
+                        style: TextStyle(color: Colors.red),
                       ),
-                      child: const Icon(Icons.location_on,
-                          color: Color(0xFF6F4E37), size: 20),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            /// ─── PAYMENT METHOD (SHOPEE STYLE) ────────
+            _sectionTitle('Payment Method'),
+            const SizedBox(height: 10),
+
+            if (paymentMgr.isLoading)
+              const Center(child: CircularProgressIndicator())
+            else ...[
+              // ===== COD =====
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: RadioListTile<String>(
+                  value: 'cod',
+                  groupValue: _paymentMethodId,
+                  onChanged: (v) => setState(() => _paymentMethodId = v),
+                  secondary: const Icon(Icons.payments, color: Colors.brown),
+                  title: const Text('Thanh toán khi nhận hàng (COD)'),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // ===== EWALLET =====
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    RadioListTile<String>(
+                      value: 'ewallet_group', // Giá trị giả để đại diện nhóm
+                      groupValue: _paymentMethodId == 'ewallet'
+                          ? 'ewallet_group'
+                          : _paymentMethodId,
+                      onChanged: (v) {
+                        if (paymentMgr.ewallets.isEmpty) {
+                          context.push('/payment/add?type=ewallet');
+                        }
+                      },
+                      secondary: const Icon(
+                        Icons.account_balance_wallet,
+                        color: Colors.orange,
+                      ),
+                      title: const Text('Ví điện tử'),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: defaultAddr != null
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  defaultAddr.title,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  defaultAddr.detail,
-                                  style: const TextStyle(
-                                      color: Colors.grey, fontSize: 13),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            )
-                          : const Text(
-                              'Chọn địa chỉ giao hàng',
-                              style: TextStyle(color: Colors.red),
-                            ),
+
+                    ...paymentMgr.ewallets.map((m) {
+                      final acc = m.accountNumber;
+                      final last4 = acc.length >= 4
+                          ? acc.substring(acc.length - 4)
+                          : acc;
+
+                      return Card(
+                        color: _paymentMethodId == m.id
+                            ? Colors.brown.shade50
+                            : Colors.white,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        child: RadioListTile<String>(
+                          value: m.id,
+                          groupValue: _paymentMethodId,
+                          onChanged: (v) =>
+                              setState(() => _paymentMethodId = v),
+                          secondary: _getIcon(m.provider),
+                          title: Text(
+                            '${m.provider.toUpperCase()} **** $last4',
+                          ),
+                        ),
+                      );
+                    }),
+
+                    TextButton(
+                      onPressed: () =>
+                          context.push('/payment/add?type=ewallet'),
+                      child: const Text('+ Liên kết ví mới'),
                     ),
-                    const Icon(Icons.chevron_right, color: Colors.grey),
                   ],
                 ),
               ),
-            ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
-            // ─── PAYMENT METHOD ────────────────────────────────────
-            _sectionTitle('Payment Method'),
-            const SizedBox(height: 8),
-            ..._paymentOptions.map((option) {
-              final isSelected = _paymentMethod == option['value'];
-              return GestureDetector(
-                onTap: () =>
-                    setState(() => _paymentMethod = option['value'] as String),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isSelected
-                          ? const Color(0xFF6F4E37)
-                          : Colors.transparent,
-                      width: 2,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFF6F4E37)
-                              : const Color(0xFFEFE3D3),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          option['icon'] as IconData,
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFF6F4E37),
-                          size: 20,
-                        ),
+              // ===== CREDIT/DEBIT CARD =====
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    RadioListTile<String>(
+                      value: 'card_group',
+                      groupValue: _paymentMethodId == 'card'
+                          ? 'card_group'
+                          : _paymentMethodId,
+                      onChanged: (v) {
+                        if (paymentMgr.cards.isEmpty) {
+                          context.push('/payment/add?type=card');
+                        }
+                      },
+                      secondary: const Icon(
+                        Icons.credit_card,
+                        color: Colors.blue,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          option['label'] as String,
-                          style: TextStyle(
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
+                      title: const Text('Thẻ tín dụng / Ghi nợ'),
+                    ),
+
+                    ...paymentMgr.cards.map((m) {
+                      final acc = m.accountNumber;
+                      final last4 = acc.length >= 4
+                          ? acc.substring(acc.length - 4)
+                          : acc;
+
+                      return Card(
+                        color: _paymentMethodId == m.id
+                            ? Colors.brown.shade50
+                            : Colors.white,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        child: RadioListTile<String>(
+                          value: m.id,
+                          groupValue: _paymentMethodId,
+                          onChanged: (v) =>
+                              setState(() => _paymentMethodId = v),
+                          secondary: _getIcon(m.provider),
+                          title: Text(
+                            '${m.provider.toUpperCase()} **** $last4',
                           ),
                         ),
-                      ),
-                      if (isSelected)
-                        const Icon(Icons.check_circle,
-                            color: Color(0xFF6F4E37), size: 20),
-                    ],
-                  ),
+                      );
+                    }),
+
+                    TextButton(
+                      onPressed: () => context.push('/payment/add?type=card'),
+                      child: const Text('+ Thêm thẻ mới'),
+                    ),
+                  ],
                 ),
-              );
-            }),
+              ),
+            ],
 
             const SizedBox(height: 20),
 
-            // ─── ORDER ITEMS ───────────────────────────────────────
+            /// ─── ORDER ITEMS ─────────────────────────
             _sectionTitle('Order Items (${cart.items.length})'),
             const SizedBox(height: 8),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: cart.items.map((item) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.product.title,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                        Text('x${item.quantity}',
-                            style: const TextStyle(color: Colors.grey)),
-                        const SizedBox(width: 12),
-                        Text(
-                          '\$${(item.product.price * item.quantity).toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF6F4E37),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
+            Column(
+              children: cart.items.map((item) {
+                return ListTile(
+                  title: Text(item.product.title),
+                  trailing: Text(
+                    '\$${(item.product.price * item.quantity).toStringAsFixed(2)}',
+                  ),
+                );
+              }).toList(),
             ),
 
             const SizedBox(height: 20),
 
-            // ─── ORDER SUMMARY ─────────────────────────────────────
+            /// ─── SUMMARY ─────────────────────────────
             _sectionTitle('Order Summary'),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  _priceRow('Subtotal', '\$${subtotal.toStringAsFixed(2)}'),
-                  _priceRow('Shipping',
-                      shipping == 0 ? 'Free' : '\$${shipping.toStringAsFixed(2)}'),
-                  _priceRow('Tax (8%)', '\$${taxes.toStringAsFixed(2)}'),
-                  const Divider(height: 20),
-                  _priceRow('Total', '\$${total.toStringAsFixed(2)}',
-                      isBold: true),
-                ],
-              ),
+            _priceRow('Subtotal', '\$${subtotal.toStringAsFixed(2)}'),
+            _priceRow(
+              'Shipping',
+              shipping == 0 ? 'Free' : '\$${shipping.toStringAsFixed(2)}',
             ),
+            _priceRow('Tax', '\$${taxes.toStringAsFixed(2)}'),
+            _priceRow('Total', '\$${total.toStringAsFixed(2)}', isBold: true),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 30),
 
-            // ─── PLACE ORDER BUTTON ────────────────────────────────
+            /// ─── BUTTON ──────────────────────────────
             SizedBox(
               width: double.infinity,
-              height: 56,
+              height: 55,
               child: ElevatedButton(
+                onPressed: (orderMgr.isLoading || _paymentMethodId == null)
+                    ? null
+                    : _placeOrder,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6F4E37),
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                  elevation: 4,
-                  shadowColor: const Color(0xFF6F4E37).withOpacity(0.4),
                 ),
-                onPressed: orderMgr.isLoading ? null : _placeOrder,
                 child: orderMgr.isLoading
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2),
-                      )
-                    : const Text(
-                        'Place Order',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Place Order'),
               ),
             ),
-
-            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -341,28 +373,22 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _sectionTitle(String text) => Text(
-        text,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-      );
+    text,
+    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+  );
 
   Widget _priceRow(String label, String value, {bool isBold = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label,
-              style: TextStyle(color: isBold ? Colors.black : Colors.grey)),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              fontSize: isBold ? 16 : 14,
-              color: isBold ? const Color(0xFF6F4E37) : Colors.black,
-            ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
