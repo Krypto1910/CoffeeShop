@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pocketbase/pocketbase.dart';
 import '../../models/product.dart';
 import '../../services/pb_client.dart';
 
@@ -27,6 +26,7 @@ class ProductManager extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  // Filtered getter for SearchPage and ProductListPage
   List<Product> get products {
     List<Product> result = _products.where((p) {
       if (_selectedCategoryId.isNotEmpty && p.categoryID != _selectedCategoryId)
@@ -42,7 +42,6 @@ class ProductManager extends ChangeNotifier {
       return true;
     }).toList();
 
-    // SORT
     if (_sortType == SortType.priceAsc) {
       result.sort((a, b) => a.price.compareTo(b.price));
     } else if (_sortType == SortType.priceDesc) {
@@ -51,6 +50,9 @@ class ProductManager extends ChangeNotifier {
 
     return result;
   }
+
+  // Raw getter for HomePage
+  List<Product> get allProducts => List.unmodifiable(_products);
 
   List<Category> get categories => _categories;
   String get selectedCategoryId => _selectedCategoryId;
@@ -97,16 +99,12 @@ class ProductManager extends ChangeNotifier {
 
     try {
       final pb = await PbClient.instance;
-
       final results = await Future.wait([
         pb.collection('Category').getFullList(sort: 'name'),
         pb.collection('Product').getFullList(sort: 'title'),
       ]);
 
-      _categories = results[0]
-          .map((e) => Category.fromJson(e.toJson()))
-          .toList();
-
+      _categories = results[0].map((e) => Category.fromJson(e.toJson())).toList();
       _products = results[1].map((e) => Product.fromJson(e.toJson())).toList();
     } catch (e) {
       _errorMessage = e.toString();

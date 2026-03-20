@@ -58,7 +58,7 @@ class OrderManager extends ChangeNotifier {
       return true;
     } on ClientException catch (e) {
       debugPrint('PLACE ORDER ERROR: ${e.response}');
-      _errorMessage = e.response['message']?.toString() ?? 'Đặt hàng thất bại';
+      _errorMessage = e.response['message']?.toString() ?? 'Failed to place order';
       return false;
     } catch (e) {
       debugPrint('PLACE ORDER EXCEPTION: $e');
@@ -82,7 +82,6 @@ class OrderManager extends ChangeNotifier {
       debugPrint('FETCH ORDERS for userId: $userId');
       debugPrint('AUTH TOKEN valid: ${pb.authStore.isValid}');
 
-      // PocketBase v0.36: Relation field dùng cú pháp field.id
       final records = await pb.collection('Order').getFullList(
         filter: 'userID.id = "$userId"',
         sort: '-created',
@@ -94,7 +93,7 @@ class OrderManager extends ChangeNotifier {
     } on ClientException catch (e) {
       debugPrint('FETCH ORDERS ERROR: ${e.response}');
       debugPrint('FETCH ORDERS STATUS: ${e.statusCode}');
-      _errorMessage = e.response['message']?.toString() ?? 'Lỗi tải đơn hàng';
+      _errorMessage = e.response['message']?.toString() ?? 'Failed to fetch orders';
     } catch (e) {
       debugPrint('FETCH ORDERS EXCEPTION: $e');
       _errorMessage = e.toString();

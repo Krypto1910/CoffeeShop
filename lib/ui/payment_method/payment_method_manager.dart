@@ -25,7 +25,7 @@ class PaymentMethodManager extends ChangeNotifier {
       final pb = await PbClient.instance;
 
       final records = await pb
-          .collection('payment_methods')
+          .collection('PaymentMethod')
           .getFullList(filter: 'userId = "$userId"');
 
       _methods = records
@@ -52,7 +52,7 @@ class PaymentMethodManager extends ChangeNotifier {
       final pb = await PbClient.instance;
 
       await pb
-          .collection('payment_methods')
+          .collection('PaymentMethod')
           .create(
             body: {
               'userId': userId,

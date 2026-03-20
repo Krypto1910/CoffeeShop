@@ -18,103 +18,110 @@ class _SearchPageState extends State<SearchPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final manager = context.read<ProductManager>();
-      if (manager.products.isEmpty) {
-        manager.fetchAll();
-      }
       _controller.text = manager.searchQuery;
     });
   }
 
   @override
   void dispose() {
+    // Dismiss keyboard immediately
+    FocusManager.instance.primaryFocus?.unfocus();
+    
     _controller.dispose();
+    
+    // Use Future.microtask to ensure cleanup happens after navigation completes
+    Future.microtask(() {
+      context.read<ProductManager>().clearFilter();
+    });
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Search')),
       backgroundColor: const Color(0xFFF6EFE8),
-      body: Column(
-        children: [
-          // 🔍 SEARCH BOX
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    autofocus: true,
-                    onChanged: (value) {
-                      context.read<ProductManager>().setSearch(value);
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Search coffee...',
-                      prefixIcon: const Icon(Icons.search),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      autofocus: true,
+                      onChanged: (value) {
+                        context.read<ProductManager>().setSearch(value);
+                      },
+                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                      decoration: InputDecoration(
+                        hintText: 'Search coffee...',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                InkWell(
-                  onTap: () => _showFilterSheet(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6F4E37),
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(width: 12),
+                  InkWell(
+                    onTap: () => _showFilterSheet(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6F4E37),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: const Icon(Icons.tune, color: Colors.white),
                     ),
-                    child: const Icon(Icons.tune, color: Colors.white),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-
-          // 📦 RESULT LIST
-          Expanded(
-            child: Consumer<ProductManager>(
-              builder: (context, manager, _) {
-                if (manager.isLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF6F4E37)),
-                  );
-                }
-
-                if (manager.products.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No results',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: manager.products.length,
-                  itemBuilder: (context, index) {
-                    final product = manager.products[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: ProductCard(product: product, onTap: () {}),
+            Expanded(
+              child: Consumer<ProductManager>(
+                builder: (context, manager, _) {
+                  if (manager.isLoading) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: Color(0xFF6F4E37)),
                     );
-                  },
-                );
-              },
+                  }
+
+                  if (manager.products.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No results',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: manager.products.length,
+                    itemBuilder: (context, index) {
+                      final product = manager.products[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: ProductCard(
+                          product: product, 
+                          onTap: () {
+                            FocusScope.of(context).unfocus();
+                          }
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -129,8 +136,9 @@ class _SearchPageState extends State<SearchPage> {
   }
 }
 
+// --- FILTER SHEET CLASS ---
 class _FilterSheet extends StatefulWidget {
-  const _FilterSheet();
+  const _FilterSheet({super.key});
 
   @override
   State<_FilterSheet> createState() => _FilterSheetState();
@@ -203,10 +211,7 @@ class _FilterSheetState extends State<_FilterSheet> {
               ],
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Category',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
+            const Text('Category', style: TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -219,9 +224,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                   },
                   selectedColor: const Color(0xFF6F4E37),
                   labelStyle: TextStyle(
-                    color: _selectedCategory.isEmpty
-                        ? Colors.white
-                        : Colors.black,
+                    color: _selectedCategory.isEmpty ? Colors.white : Colors.black,
                   ),
                 ),
                 ...manager.categories.map(
@@ -233,19 +236,14 @@ class _FilterSheetState extends State<_FilterSheet> {
                     },
                     selectedColor: const Color(0xFF6F4E37),
                     labelStyle: TextStyle(
-                      color: _selectedCategory == c.id
-                          ? Colors.white
-                          : Colors.black,
+                      color: _selectedCategory == c.id ? Colors.white : Colors.black,
                     ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Price Range (\$)',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
+            const Text('Price Range', style: TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -253,65 +251,22 @@ class _FilterSheetState extends State<_FilterSheet> {
                   child: TextField(
                     controller: _minController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      hintText: 'Min',
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(hintText: 'Min', border: OutlineInputBorder()),
                     onChanged: (val) => _minPrice = double.tryParse(val),
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('-'),
-                ),
+                const Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('-')),
                 Expanded(
                   child: TextField(
                     controller: _maxController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      hintText: 'Max',
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(hintText: 'Max', border: OutlineInputBorder()),
                     onChanged: (val) => _maxPrice = double.tryParse(val),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Sort By',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: [
-                ChoiceChip(
-                  label: const Text('None'),
-                  selected: _sortType == SortType.none,
-                  onSelected: (v) {
-                    if (v) setState(() => _sortType = SortType.none);
-                  },
-                ),
-                ChoiceChip(
-                  label: const Text('Price: Low to High'),
-                  selected: _sortType == SortType.priceAsc,
-                  onSelected: (v) {
-                    if (v) setState(() => _sortType = SortType.priceAsc);
-                  },
-                ),
-                ChoiceChip(
-                  label: const Text('Price: High to Low'),
-                  selected: _sortType == SortType.priceDesc,
-                  onSelected: (v) {
-                    if (v) setState(() => _sortType = SortType.priceDesc);
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -319,9 +274,6 @@ class _FilterSheetState extends State<_FilterSheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6F4E37),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
                 ),
                 onPressed: () {
                   manager.selectCategory(_selectedCategory);

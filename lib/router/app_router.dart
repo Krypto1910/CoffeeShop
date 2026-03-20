@@ -20,7 +20,7 @@ import '../ui/checkout/order_success_page.dart';
 import '../ui/product/product_detail_page.dart';
 import '../ui/product/product_list_page.dart';
 import '../ui/checkout/choose_address_page.dart';
-import '../ui/search/search_page.dart'; // 🔥 ADD
+import '../ui/search/search_page.dart'; 
 
 import '../models/product.dart';
 

@@ -89,10 +89,6 @@ class OrderModel {
       status == 'pending' || status == 'confirmed' || status == 'delivering';
 }
 
-// ─── HELPERS ─────────────────────────────────────────────────────
-/// PocketBase Relation field có thể trả về:
-/// - String: "recordId"
-/// - List: ["recordId"]  ← multi-relation hoặc single trả về array
 String _parseRelationId(dynamic value) {
   if (value == null) return '';
   if (value is String) return value;

@@ -318,11 +318,12 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
 
   Future<void> _load() async {
     final items = await widget.manager.fetchOrderItems(widget.order.id);
-    if (mounted)
+    if (mounted) {
       setState(() {
         _items = items;
         _loading = false;
       });
+    }
   }
 
   @override

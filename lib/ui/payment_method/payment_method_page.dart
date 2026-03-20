@@ -49,7 +49,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx), // ✅ FIX
+            onPressed: () => Navigator.pop(ctx), 
             child: const Text('Cancel'),
           ),
           ElevatedButton(
@@ -72,7 +72,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
               // 🔥 Reload lại list
               await context.read<PaymentMethodManager>().fetch(userId);
 
-              Navigator.pop(ctx); // ✅ FIX QUAN TRỌNG
+              Navigator.pop(ctx); 
             },
             child: const Text('Save'),
           ),
@@ -107,7 +107,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                   ),
 
                 ...mgr.methods.map((m) {
-                  final number = m.accountNumber ?? '';
+                  final number = m.accountNumber ;
 
                   return ListTile(
                     leading: Icon(
@@ -115,7 +115,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
                           ? Icons.credit_card
                           : Icons.account_balance_wallet,
                     ),
-                    title: Text(m.accountName ?? ''),
+                    title: Text(m.accountName ),
                     subtitle: Text(_maskNumber(number)),
                   );
                 }),

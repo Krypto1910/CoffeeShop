@@ -30,7 +30,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
         final paymentMgr = context.read<PaymentMethodManager>();
         await paymentMgr.fetch(userId);
 
-        // ✅ AUTO CHỌN DEFAULT METHOD (Hoặc chọn COD làm mặc định ban đầu)
         if (paymentMgr.methods.isNotEmpty) {
           final defaultMethod = paymentMgr.methods.firstWhere(
             (e) => e.isDefault == true,
@@ -48,7 +47,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     });
   }
 
-  /// Hàm hỗ trợ lấy Icon cho phương thức thanh toán
+
   Widget _getIcon(String provider) {
     switch (provider.toLowerCase()) {
       case 'momo':
@@ -74,12 +73,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     final defaultAddr = addressMgr.defaultAddress;
     if (defaultAddr == null) {
-      _showSnack('Vui lòng chọn địa chỉ giao hàng', isError: true);
+      _showSnack('Please select a delivery address', isError: true);
       return;
     }
 
     if (_paymentMethodId == null) {
-      _showSnack('Vui lòng chọn phương thức thanh toán', isError: true);
+      _showSnack('Please select a payment method', isError: true);
       return;
     }
 
@@ -105,7 +104,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       await cart.clearCart();
       context.go('/cart/checkout/success');
     } else {
-      _showSnack(orderMgr.errorMessage ?? 'Đặt hàng thất bại', isError: true);
+      _showSnack(orderMgr.errorMessage ?? 'Failed to place order', isError: true);
     }
   }
 
@@ -132,6 +131,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final taxes = subtotal * taxPercent;
     final shipping = subtotal > 20 ? 0.0 : 2.0;
     final total = subtotal + taxes + shipping;
+
+    // Check if ewallet or card parent is selected
+    final isEwalletSelected = _paymentMethodId != null &&
+        paymentMgr.ewallets.any((e) => e.id == _paymentMethodId);
+    final isCardSelected = _paymentMethodId != null &&
+        paymentMgr.cards.any((c) => c.id == _paymentMethodId);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6EFE8),
@@ -188,7 +193,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   groupValue: _paymentMethodId,
                   onChanged: (v) => setState(() => _paymentMethodId = v),
                   secondary: const Icon(Icons.payments, color: Colors.brown),
-                  title: const Text('Thanh toán khi nhận hàng (COD)'),
+                  title: const Text('Cash on Delivery (COD)'),
                 ),
               ),
 
@@ -202,54 +207,60 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 child: Column(
                   children: [
                     RadioListTile<String>(
-                      value: 'ewallet_group', // Giá trị giả để đại diện nhóm
-                      groupValue: _paymentMethodId == 'ewallet'
-                          ? 'ewallet_group'
-                          : _paymentMethodId,
+                      value: 'ewallet_group',
+                      groupValue: isEwalletSelected ? 'ewallet_group' : null,
                       onChanged: (v) {
                         if (paymentMgr.ewallets.isEmpty) {
                           context.push('/payment/add?type=ewallet');
+                        } else {
+                          // Auto-select first ewallet if exists
+                          setState(() => _paymentMethodId = paymentMgr.ewallets.first.id);
                         }
                       },
                       secondary: const Icon(
                         Icons.account_balance_wallet,
                         color: Colors.orange,
                       ),
-                      title: const Text('Ví điện tử'),
+                      title: const Text('E-Wallet'),
                     ),
 
-                    ...paymentMgr.ewallets.map((m) {
-                      final acc = m.accountNumber;
-                      final last4 = acc.length >= 4
-                          ? acc.substring(acc.length - 4)
-                          : acc;
+                    // Only show child methods if parent is selected
+                    if (isEwalletSelected)
+                      ...paymentMgr.ewallets.map((m) {
+                        final acc = m.accountNumber;
+                        final last4 = acc.length >= 4
+                            ? acc.substring(acc.length - 4)
+                            : acc;
 
-                      return Card(
-                        color: _paymentMethodId == m.id
-                            ? Colors.brown.shade50
-                            : Colors.white,
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        child: RadioListTile<String>(
-                          value: m.id,
-                          groupValue: _paymentMethodId,
-                          onChanged: (v) =>
-                              setState(() => _paymentMethodId = v),
-                          secondary: _getIcon(m.provider),
-                          title: Text(
-                            '${m.provider.toUpperCase()} **** $last4',
+                        return Card(
+                          color: _paymentMethodId == m.id
+                              ? Colors.brown.shade50
+                              : Colors.white,
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
                           ),
-                        ),
-                      );
-                    }),
+                          child: ListTile(
+                            onTap: () =>
+                                setState(() => _paymentMethodId = m.id),
+                            leading: _getIcon(m.provider),
+                            title: Text(
+                              '${m.provider.toUpperCase()} **** $last4',
+                            ),
+                            trailing: _paymentMethodId == m.id
+                                ? const Icon(Icons.check_circle,
+                                    color: Colors.brown)
+                                : null,
+                          ),
+                        );
+                      }),
 
-                    TextButton(
-                      onPressed: () =>
-                          context.push('/payment/add?type=ewallet'),
-                      child: const Text('+ Liên kết ví mới'),
-                    ),
+                    if (isEwalletSelected)
+                      TextButton(
+                        onPressed: () =>
+                            context.push('/payment/add?type=ewallet'),
+                        child: const Text('+ Add new e-wallet'),
+                      ),
                   ],
                 ),
               ),
@@ -265,52 +276,59 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   children: [
                     RadioListTile<String>(
                       value: 'card_group',
-                      groupValue: _paymentMethodId == 'card'
-                          ? 'card_group'
-                          : _paymentMethodId,
+                      groupValue: isCardSelected ? 'card_group' : null,
                       onChanged: (v) {
                         if (paymentMgr.cards.isEmpty) {
                           context.push('/payment/add?type=card');
+                        } else {
+                          // Auto-select first card if exists
+                          setState(() => _paymentMethodId = paymentMgr.cards.first.id);
                         }
                       },
                       secondary: const Icon(
                         Icons.credit_card,
                         color: Colors.blue,
                       ),
-                      title: const Text('Thẻ tín dụng / Ghi nợ'),
+                      title: const Text('Credit/Debit Card'),
                     ),
 
-                    ...paymentMgr.cards.map((m) {
-                      final acc = m.accountNumber;
-                      final last4 = acc.length >= 4
-                          ? acc.substring(acc.length - 4)
-                          : acc;
+                    // Only show child methods if parent is selected
+                    if (isCardSelected)
+                      ...paymentMgr.cards.map((m) {
+                        final acc = m.accountNumber;
+                        final last4 = acc.length >= 4
+                            ? acc.substring(acc.length - 4)
+                            : acc;
 
-                      return Card(
-                        color: _paymentMethodId == m.id
-                            ? Colors.brown.shade50
-                            : Colors.white,
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        child: RadioListTile<String>(
-                          value: m.id,
-                          groupValue: _paymentMethodId,
-                          onChanged: (v) =>
-                              setState(() => _paymentMethodId = v),
-                          secondary: _getIcon(m.provider),
-                          title: Text(
-                            '${m.provider.toUpperCase()} **** $last4',
+                        return Card(
+                          color: _paymentMethodId == m.id
+                              ? Colors.brown.shade50
+                              : Colors.white,
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
                           ),
-                        ),
-                      );
-                    }),
+                          child: ListTile(
+                            onTap: () =>
+                                setState(() => _paymentMethodId = m.id),
+                            leading: _getIcon(m.provider),
+                            title: Text(
+                              '${m.provider.toUpperCase()} **** $last4',
+                            ),
+                            trailing: _paymentMethodId == m.id
+                                ? const Icon(Icons.check_circle,
+                                    color: Colors.blue)
+                                : null,
+                          ),
+                        );
+                      }),
 
-                    TextButton(
-                      onPressed: () => context.push('/payment/add?type=card'),
-                      child: const Text('+ Thêm thẻ mới'),
-                    ),
+                    if (isCardSelected)
+                      TextButton(
+                        onPressed: () =>
+                            context.push('/payment/add?type=card'),
+                        child: const Text('+ Add new card'),
+                      ),
                   ],
                 ),
               ),

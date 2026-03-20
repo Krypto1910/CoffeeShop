@@ -59,7 +59,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           SingleChildScrollView(
             child: Column(
               children: [
-                const SizedBox(height: 72),
+                const SizedBox(height: 16),
 
                 // ─── IMAGE ────────────────────────────────────────────
                 Padding(
