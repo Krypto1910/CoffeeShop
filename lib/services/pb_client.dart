@@ -10,11 +10,11 @@ class PbClient {
   static PocketBase? _instance;
 
   static String get baseUrl {
-    if (kIsWeb) return 'http://127.0.0.1:8090';
+    if (kIsWeb) return 'http://45.63.68.43:8090';
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:8090';
+      return 'http://45.63.68.43:8090';
     }
-    return 'http://127.0.0.1:8090';
+    return 'http://45.63.68.43:8090';
   }
 
   static Future<PocketBase> get instance async {
