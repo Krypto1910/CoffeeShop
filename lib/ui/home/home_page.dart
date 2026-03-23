@@ -13,6 +13,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // Hàm _showSortDialog đã được chuyển sang HeroSection
+
   @override
   void initState() {
     super.initState();
@@ -28,22 +30,33 @@ class _HomePageState extends State<HomePage> {
       body: RefreshIndicator(
         onRefresh: () async => await context.read<ProductManager>().fetchAll(),
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Thanh Search ở trên và chức năng lọc đã nằm gọn trong Widget này
               const HeroSection(),
-              
-              // Categories Section
+
+              const SizedBox(height: 20),
+
+              // 🔥 Categories
               Consumer<ProductManager>(
                 builder: (context, manager, _) {
-                  if (manager.categories.isEmpty) return const SizedBox.shrink();
+                  if (manager.categories.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Padding(
-                        padding: EdgeInsets.fromLTRB(16, 24, 16, 12),
-                        child: Text('Categories', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        padding: EdgeInsets.fromLTRB(16, 16, 16, 12),
+                        child: Text(
+                          'Categories',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                       SizedBox(
                         height: 44,
@@ -53,21 +66,42 @@ class _HomePageState extends State<HomePage> {
                           itemCount: manager.categories.length + 1,
                           itemBuilder: (context, index) {
                             final isAll = index == 0;
-                            final catId = isAll ? '' : manager.categories[index - 1].id;
-                            final catName = isAll ? 'All Menu' : manager.categories[index - 1].name;
-                            final isSelected = manager.selectedCategoryId == catId;
+                            final catId = isAll
+                                ? ''
+                                : manager.categories[index - 1].id;
+                            final catName = isAll
+                                ? 'All Menu'
+                                : manager.categories[index - 1].name;
+
+                            final isSelected =
+                                manager.selectedCategoryId == catId;
 
                             return GestureDetector(
-                              onTap: () => manager.selectCategory(catId),
+                              onTap: () {
+                                manager.selectCategory(catId);
+                              },
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 200),
                                 margin: const EdgeInsets.only(right: 10),
-                                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? const Color(0xFF6F4E37) : Colors.white,
+                                  color: isSelected
+                                      ? const Color(0xFF6F4E37)
+                                      : Colors.white,
                                   borderRadius: BorderRadius.circular(30),
                                 ),
-                                child: Text(catName, style: TextStyle(color: isSelected ? Colors.white : const Color(0xFF6F4E37), fontWeight: FontWeight.w600)),
+                                child: Text(
+                                  catName,
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? Colors.white
+                                        : const Color(0xFF6F4E37),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
                             );
                           },
@@ -78,52 +112,48 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
 
-              const SizedBox(height: 24),
-              
-              // Menu Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: InkWell(
-                  onTap: () => context.push('/home/product'),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('Menu', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                      SizedBox(width: 6),
-                      Icon(Icons.chevron_right, size: 22, color: Colors.black54),
-                    ],
-                  ),
-                ),
-              ),
+              const SizedBox(height: 20),
 
-              // Product List Section (Uses allProducts)
+              // 🔥 PRODUCT GRID (ALL + FILTER)
               Consumer<ProductManager>(
                 builder: (context, manager, _) {
-                  final displayProducts = manager.allProducts;
+                  final displayProducts = manager.products;
+
                   if (manager.isLoading && displayProducts.isEmpty) {
-                    return const SizedBox(height: 270, child: Center(child: CircularProgressIndicator(color: Color(0xFF6F4E37))));
-                  }
-                  if (displayProducts.isEmpty) {
-                    return const SizedBox(height: 100, child: Center(child: Text('No products yet', style: TextStyle(color: Colors.grey))));
+                    return const Center(child: CircularProgressIndicator());
                   }
 
-                  return SizedBox(
-                    height: 270,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: displayProducts.length.clamp(0, 10),
-                      itemBuilder: (context, index) {
-                        final product = displayProducts[index];
-                        return ProductCard(
-                          product: product,
-                          onTap: () => context.push('/home/product/${product.id}', extra: product),
-                        );
-                      },
-                    ),
+                  if (displayProducts.isEmpty) {
+                    return const Center(child: Text('No products'));
+                  }
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: displayProducts.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.7,
+                        ),
+                    itemBuilder: (context, index) {
+                      final product = displayProducts[index];
+
+                      return ProductCard(
+                        product: product,
+                        onTap: () => context.push(
+                          '/home/product/${product.id}',
+                          extra: product,
+                        ),
+                      );
+                    },
                   );
                 },
               ),
+
               const SizedBox(height: 24),
             ],
           ),

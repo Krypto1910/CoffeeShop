@@ -5,6 +5,7 @@ import '../../services/pb_client.dart';
 class Category {
   final String id;
   final String name;
+
   Category({required this.id, required this.name});
 
   factory Category.fromJson(Map<String, dynamic> json) =>
@@ -26,15 +27,18 @@ class ProductManager extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
-  // Filtered getter for SearchPage and ProductListPage
+  // 🔥 FILTER + SORT
   List<Product> get products {
     List<Product> result = _products.where((p) {
-      if (_selectedCategoryId.isNotEmpty && p.categoryID != _selectedCategoryId)
+      if (_selectedCategoryId.isNotEmpty &&
+          p.categoryID != _selectedCategoryId) {
         return false;
+      }
 
       if (_searchQuery.isNotEmpty &&
-          !p.title.toLowerCase().contains(_searchQuery.toLowerCase()))
+          !p.title.toLowerCase().contains(_searchQuery.toLowerCase())) {
         return false;
+      }
 
       if (_minPrice != null && p.price < _minPrice!) return false;
       if (_maxPrice != null && p.price > _maxPrice!) return false;
@@ -51,18 +55,21 @@ class ProductManager extends ChangeNotifier {
     return result;
   }
 
-  // Raw getter for HomePage
+  // 🔥 RAW LIST
   List<Product> get allProducts => List.unmodifiable(_products);
 
+  // 🔥 GETTERS (FIX LỖI Ở ĐÂY)
   List<Category> get categories => _categories;
   String get selectedCategoryId => _selectedCategoryId;
   SortType get sortType => _sortType;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  String get searchQuery => _searchQuery;
-  double? get minPrice => _minPrice;
-  double? get maxPrice => _maxPrice;
 
+  String get searchQuery => _searchQuery; // ✅ FIX
+  double? get minPrice => _minPrice; // ✅ FIX
+  double? get maxPrice => _maxPrice; // ✅ FIX
+
+  // 🔥 SETTERS
   void setSearch(String value) {
     _searchQuery = value;
     notifyListeners();
@@ -93,18 +100,23 @@ class ProductManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  // 🔥 FETCH DATA
   Future<void> fetchAll() async {
     _isLoading = true;
     notifyListeners();
 
     try {
       final pb = await PbClient.instance;
+
       final results = await Future.wait([
         pb.collection('Category').getFullList(sort: 'name'),
         pb.collection('Product').getFullList(sort: 'title'),
       ]);
 
-      _categories = results[0].map((e) => Category.fromJson(e.toJson())).toList();
+      _categories = results[0]
+          .map((e) => Category.fromJson(e.toJson()))
+          .toList();
+
       _products = results[1].map((e) => Product.fromJson(e.toJson())).toList();
     } catch (e) {
       _errorMessage = e.toString();

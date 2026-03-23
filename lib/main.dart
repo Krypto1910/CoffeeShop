@@ -17,12 +17,32 @@ import 'ui/payment_method/payment_method_manager.dart';
 import 'services/notification_service.dart';
 
 void main() async {
+  // Bắt buộc phải có để khởi tạo các binding của Flutter
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load env trước khi dùng AuthProvider
-  await dotenv.load(fileName: '.env');
+  print("=== [1] BẮT ĐẦU CHẠY MAIN ===");
 
-  await NotificationService().init();
+  // 1. Kiểm tra load .env
+  try {
+    print("=== [2] ĐANG LOAD .ENV ===");
+    await dotenv.load(fileName: '.env');
+    print("=== [3] LOAD .ENV THÀNH CÔNG ===");
+  } catch (e) {
+    print("=== [!] LỖI LOAD .ENV: $e ===");
+    print("=== (App vẫn sẽ tiếp tục chạy bỏ qua .env) ===");
+  }
+
+  // 2. Kiểm tra khởi tạo Notification (Rất dễ gây treo app nếu chưa config native)
+  try {
+    print("=== [4] ĐANG INIT NOTIFICATION SERVICE ===");
+    // TẠM THỜI COMMENT DÒNG NÀY LẠI ĐỂ TRÁNH TREO MÀN HÌNH ĐEN
+    // await NotificationService().init();
+    print("=== [5] INIT NOTIFICATION (Đã bỏ qua để test) ===");
+  } catch (e) {
+    print("=== [!] LỖI NOTIFICATION: $e ===");
+  }
+
+  print("=== [6] CHUẨN BỊ CHẠY RUNAPP ===");
 
   runApp(const CoffeeApp());
 }

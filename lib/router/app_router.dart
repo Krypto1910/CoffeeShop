@@ -20,7 +20,7 @@ import '../ui/checkout/order_success_page.dart';
 import '../ui/product/product_detail_page.dart';
 import '../ui/product/product_list_page.dart';
 import '../ui/checkout/choose_address_page.dart';
-import '../ui/search/search_page.dart'; 
+import '../ui/search/search_page.dart';
 
 import '../models/product.dart';
 
@@ -71,15 +71,19 @@ GoRouter createAppRouter(AuthProvider authProvider) {
                 path: '/home',
                 builder: (_, __) => const HomePage(),
                 routes: [
-                  // 🔥 ADD SEARCH PAGE
+                  // 🔍 SEARCH
                   GoRoute(
                     path: 'search',
                     builder: (_, __) => const SearchPage(),
                   ),
 
+                  // 🔥 FIXED: PRODUCT LIST WITH CATEGORY
                   GoRoute(
                     path: 'product',
-                    builder: (_, __) => const ProductListPage(),
+                    builder: (context, state) {
+                      final catId = state.extra as String?;
+                      return ProductListPage(categoryId: catId);
+                    },
                     routes: [
                       GoRoute(
                         path: ':id',

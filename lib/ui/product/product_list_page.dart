@@ -6,7 +6,9 @@ import '../../widgets/product_card.dart';
 import 'product_manager.dart';
 
 class ProductListPage extends StatefulWidget {
-  const ProductListPage({super.key});
+  final String? categoryId;
+
+  const ProductListPage({super.key, this.categoryId});
 
   @override
   State<ProductListPage> createState() => _ProductListPageState();
@@ -20,20 +22,18 @@ class _ProductListPageState extends State<ProductListPage> {
     super.initState();
     Future.microtask(() {
       final manager = context.read<ProductManager>();
-      manager.clearFilter();
       manager.fetchAll();
+
+      if (widget.categoryId != null) {
+        manager.selectCategory(widget.categoryId!);
+      }
     });
   }
 
   @override
   void dispose() {
-    // Dismiss keyboard immediately
-    FocusManager.instance.primaryFocus?.unfocus(); 
-    
+    FocusManager.instance.primaryFocus?.unfocus();
     _debounce?.cancel();
-    Future.microtask(() {
-      context.read<ProductManager>().clearFilter();
-    });
     super.dispose();
   }
 
@@ -59,7 +59,10 @@ class _ProductListPageState extends State<ProductListPage> {
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
                   fillColor: Colors.white,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
@@ -67,14 +70,29 @@ class _ProductListPageState extends State<ProductListPage> {
             Expanded(
               child: Consumer<ProductManager>(
                 builder: (_, mgr, __) {
-                  if (mgr.products.isEmpty) return const Center(child: Text("No results"));
+                  final products = mgr.products;
+
+                  if (products.isEmpty) {
+                    return const Center(child: Text("No results"));
+                  }
+
                   return GridView.builder(
                     padding: const EdgeInsets.all(12),
-                    itemCount: mgr.products.length,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 0.7),
+                    itemCount: products.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.7,
+                        ),
                     itemBuilder: (_, i) {
-                      final p = mgr.products[i];
-                      return ProductCard(product: p, onTap: () => context.push('/home/product/${p.id}', extra: p));
+                      final p = products[i];
+                      return ProductCard(
+                        product: p,
+                        onTap: () =>
+                            context.push('/home/product/${p.id}', extra: p),
+                      );
                     },
                   );
                 },
