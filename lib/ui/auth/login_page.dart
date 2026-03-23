@@ -13,7 +13,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool _isSignIn = true;
 
-  final _emailCtrl    = TextEditingController();
+  final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
 
@@ -25,10 +25,51 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.red[700],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
   // ─── HANDLERS ────────────────────────────────────────────────────
+  // Future<void> _handleSubmit() async {
+  //   final auth = context.read<AuthProvider>();
+  //   final email    = _emailCtrl.text.trim();
+  //   final password = _passwordCtrl.text;
+
+  //   if (email.isEmpty || password.isEmpty) {
+  //     _showError('Please fulfill the information');
+  //     return;
+  //   }
+
+  //   if (!_isSignIn) {
+  //     final confirmPassword = _confirmPasswordCtrl.text;
+  //     if (password != confirmPassword) {
+  //       _showError('Passwords do not match');
+  //       return;
+  //     }
+  //   }
+
+  //   final success = _isSignIn
+  //       ? await auth.login(email, password)
+  //       : await auth.signup(email, password);
+
+  //   if (!mounted) return;
+  //   if (success) {
+  //     context.go('/home');
+  //   } else if (auth.errorMessage != null) {
+  //     _showError(auth.errorMessage!);
+  //   }
+  // }
+
   Future<void> _handleSubmit() async {
     final auth = context.read<AuthProvider>();
-    final email    = _emailCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text;
 
     if (email.isEmpty || password.isEmpty) {
@@ -44,38 +85,69 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
 
+    print("==== LOGIN START ====");
+    print("EMAIL: $email");
+    print("PASSWORD: $password");
+
     final success = _isSignIn
         ? await auth.login(email, password)
         : await auth.signup(email, password);
 
+    print("SUCCESS: $success");
+    print("ERROR MSG: ${auth.errorMessage}");
+    print("==== LOGIN END ====");
+
     if (!mounted) return;
+
     if (success) {
+      print("➡️ LOGIN SUCCESS → NAVIGATE HOME");
       context.go('/home');
-    } else if (auth.errorMessage != null) {
-      _showError(auth.errorMessage!);
+    } else {
+      print("❌ LOGIN FAILED");
+      _showError(auth.errorMessage ?? "Login failed (unknown error)");
     }
   }
+
+  // Future<void> _handleGoogle() async {
+  //   final auth = context.read<AuthProvider>();
+  //   final success = await auth.loginWithOAuth2('google');
+  //   if (!mounted) return;
+  //   if (success) {
+  //     context.go('/home');
+  //   } else if (auth.errorMessage != null) {
+  //     _showError(auth.errorMessage!);
+  //   }
+  // }
+
+  // void _showError(String msg) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text(msg),
+  //       backgroundColor: Colors.red[700],
+  //       behavior: SnackBarBehavior.floating,
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  //     ),
+  //   );
+  // }
 
   Future<void> _handleGoogle() async {
     final auth = context.read<AuthProvider>();
+
+    print("==== GOOGLE LOGIN START ====");
+
     final success = await auth.loginWithOAuth2('google');
+
+    print("SUCCESS: $success");
+    print("ERROR MSG: ${auth.errorMessage}");
+    print("==== GOOGLE LOGIN END ====");
+
     if (!mounted) return;
+
     if (success) {
       context.go('/home');
-    } else if (auth.errorMessage != null) {
-      _showError(auth.errorMessage!);
+    } else {
+      _showError(auth.errorMessage ?? "Google login failed");
     }
-  }
-
-  void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: Colors.red[700],
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
   }
 
   // ─── BUILD ────────────────────────────────────────────────────────
@@ -105,7 +177,9 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 // IMAGE HEADER
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
+                  ),
                   child: Image.asset(
                     'assets/images/coffee_login.jpg',
                     height: 220,
@@ -115,7 +189,11 @@ class _LoginPageState extends State<LoginPage> {
                       height: 220,
                       color: const Color(0xFF8B5E3C),
                       child: const Center(
-                        child: Icon(Icons.coffee, size: 80, color: Colors.white),
+                        child: Icon(
+                          Icons.coffee,
+                          size: 80,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -127,14 +205,22 @@ class _LoginPageState extends State<LoginPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _tabButton('Log In', _isSignIn, () => setState(() {
-                      _isSignIn = true;
-                      context.read<AuthProvider>().clearError();
-                    })),
-                    _tabButton('Sign Up', !_isSignIn, () => setState(() {
-                      _isSignIn = false;
-                      context.read<AuthProvider>().clearError();
-                    })),
+                    _tabButton(
+                      'Log In',
+                      _isSignIn,
+                      () => setState(() {
+                        _isSignIn = true;
+                        context.read<AuthProvider>().clearError();
+                      }),
+                    ),
+                    _tabButton(
+                      'Sign Up',
+                      !_isSignIn,
+                      () => setState(() {
+                        _isSignIn = false;
+                        context.read<AuthProvider>().clearError();
+                      }),
+                    ),
                   ],
                 ),
 
@@ -183,14 +269,19 @@ class _LoginPageState extends State<LoginPage> {
                           onPressed: auth.isLoading ? null : _handleSubmit,
                           child: auth.isLoading
                               ? const SizedBox(
-                                  height: 20, width: 20,
+                                  height: 20,
+                                  width: 20,
                                   child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2,
+                                    color: Colors.white,
+                                    strokeWidth: 2,
                                   ),
                                 )
                               : Text(
                                   _isSignIn ? 'Log In' : 'Create Account',
-                                  style: const TextStyle(fontSize: 16, color: Colors.white),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                  ),
                                 ),
                         ),
                       ),
@@ -216,7 +307,10 @@ class _LoginPageState extends State<LoginPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: Text(
                               'or continue with',
-                              style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                           const Expanded(child: Divider()),

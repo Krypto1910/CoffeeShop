@@ -34,7 +34,8 @@ class FavoritePage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.favorite_border, size: 72, color: Colors.grey),
+          Icon(Icons.favorite_border,
+              size: 72, color: Colors.grey),
           SizedBox(height: 16),
           Text(
             'No favorite coffee yet',
@@ -46,52 +47,41 @@ class FavoritePage extends StatelessWidget {
   }
 
   Widget _buildFavoriteGrid(BuildContext context, List favorites) {
-    return LayoutBuilder(builder: (context, constraints) {
-      const crossAxisCount = 2;
-      const spacing = 16.0;
-      const padding = 16.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 16.0;
+        const padding = 16.0;
 
-      final cardWidth =
-          (constraints.maxWidth - padding * 2 - spacing) / crossAxisCount;
-      final aspectRatio = cardWidth / (cardWidth * 260 / 180);
+        int crossAxisCount = 2;
 
-      return Padding(
-        padding: const EdgeInsets.all(padding),
-        child: GridView.builder(
+        if (constraints.maxWidth > 900) {
+          crossAxisCount = 4;
+        } else if (constraints.maxWidth > 600) {
+          crossAxisCount = 3;
+        }
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(padding),
           itemCount: favorites.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             mainAxisSpacing: spacing,
             crossAxisSpacing: spacing,
-            childAspectRatio: aspectRatio,
+            childAspectRatio: 0.70, // 🔥 đã fix overflow
           ),
           itemBuilder: (context, index) {
             final product = favorites[index];
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: FittedBox(
-                fit: BoxFit.fill,
-                child: SizedBox(
-                  width: 180,
-                  height: 260,
-                  child: OverflowBox(
-                    alignment: Alignment.topLeft,
-                    maxWidth: 196,
-                    maxHeight: 260,
-                    child: ProductCard(
-                      product: product,
-                      onTap: () => context.push(
-                        '/favorite/product/${product.id}',
-                        extra: product,
-                      ),
-                    ),
-                  ),
-                ),
+
+            return ProductCard(
+              product: product,
+              onTap: () => context.push(
+                '/favorite/product/${product.id}',
+                extra: product,
               ),
             );
           },
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }

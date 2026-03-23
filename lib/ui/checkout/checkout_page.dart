@@ -342,7 +342,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             Column(
               children: cart.items.map((item) {
                 return ListTile(
-                  title: Text(item.product.title),
+                  title: Text('${item.product.title} x ${item.quantity}'),
                   trailing: Text(
                     '\$${(item.product.price * item.quantity).toStringAsFixed(2)}',
                   ),

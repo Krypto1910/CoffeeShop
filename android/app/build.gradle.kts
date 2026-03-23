@@ -18,7 +18,6 @@ android {
         versionName = flutter.versionName
     }
 
-    // 🔴 QUAN TRỌNG: BẬT DESUGARING
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -29,9 +28,33 @@ android {
         jvmTarget = "1.8"
     }
 
+    // buildTypes {
+    //     release {
+    //         signingConfig = signingConfigs.getByName("debug")
+    //     }
+    // }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("C:/Users/User/upload-keystore.jks")
+            storePassword = "123456"
+            keyAlias = "upload"
+            keyPassword = "123456"
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            // Chỉ định dùng cấu hình release vừa tạo ở trên
+            signingConfig = signingConfigs.getByName("release")
+            
+            // Các cấu hình tối ưu hóa khác
+            isMinifyEnabled = false
+            isShrinkResources = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

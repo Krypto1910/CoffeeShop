@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="ct312h_project"
         android:name="${applicationName}"
@@ -7,6 +8,9 @@
         android:usesCleartextTraffic="true">
         
         <activity
+            android:label="CoffeeShop"
+            android:icon="@mipmap/ic_launcher"
+            android:usesCleartextTraffic="true"
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"

@@ -29,12 +29,10 @@ class Product {
     );
   }
 
-  /// URL ảnh đầy đủ từ PocketBase
-  /// baseUrl: http://10.0.2.2:8090/ hoặc http://127.0.0.1:8090/
+  /// URL ảnh đầy đủ từ PocketBase, baseUrl: http://45.63.68.43:8090/ hoặc http://127.0.0.1:8090/
   String imageUrl(String baseUrl) {
     if (imagePath.isEmpty) return '';
-    // PocketBase file URL format:
-    // /api/files/{collectionName}/{recordId}/{fileName}
+    // PocketBase file URL format: /api/files/{collectionName}/{recordId}/{fileName}
     return '$baseUrl/api/files/product/$id/$imagePath';
   }
 

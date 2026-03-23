@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
-
 import 'providers/auth_provider.dart';
 import 'router/app_router.dart';
-
 import 'ui/favorite/favorite_manager.dart';
 import 'ui/cart/cart_manager.dart';
 import 'ui/address/address_manager.dart';
 import 'ui/product/product_manager.dart';
 import 'ui/order/order_manager.dart';
-
-// 🔥 THÊM IMPORT NÀY
 import 'ui/payment_method/payment_method_manager.dart';
-
 import 'services/notification_service.dart';
 
 void main() async {

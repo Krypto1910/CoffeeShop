@@ -4,7 +4,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-const pbUrl = 'http://127.0.0.1:8090';
+const pbUrl = 'http://45.63.68.43:8090';
 const adminEmail = 'jackx607@gmail.com';
 const adminPassword = 'Dquang1509!';
 
