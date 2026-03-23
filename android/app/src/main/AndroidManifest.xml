@@ -5,6 +5,7 @@
         android:label="ct312h_project"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:enableOnBackInvokedCallback="true"
         android:usesCleartextTraffic="true">
         
         <activity

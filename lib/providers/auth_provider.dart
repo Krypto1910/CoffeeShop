@@ -27,11 +27,11 @@ class AuthProvider extends ChangeNotifier {
 
   // ─── BASE URL theo platform ───────────────────────────────────────
   String get _baseUrl {
-    if (kIsWeb) return 'http://45.63.68.43:8090';
+    if (kIsWeb) return 'http://coffeeshop2303.duckdns.org:8090';
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://45.63.68.43:8090';
+      return 'http://coffeeshop2303.duckdns.org:8090';
     }
-    return 'http://45.63.68.43:8090';
+    return 'http://coffeeshop2303.duckdns.org:8090';
   }
 
   // ─── INIT ─────────────────────────────────────────────────────────
