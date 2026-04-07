@@ -44,3 +44,4 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 pb_data/data.db 
+pb_data/ 
